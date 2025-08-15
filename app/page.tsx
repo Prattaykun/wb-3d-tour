@@ -35,6 +35,20 @@ export default function WBMap() {
     map.on('load', () => {
       // Constrain initial bounds
       map.setMaxBounds(WEST_BENGAL_BOUNDS);
+         map.addSource('wbBorder', {
+         type: 'geojson',
+        data: '/geo/west_bengal_border.geojson'
+        });
+
+        map.addLayer({
+        id: 'wbBorderLine',
+        type: 'line',
+        source: 'wbBorder',
+        paint: {
+         'line-color': '#e11d48',
+          'line-width': 2
+        }
+        });
 
       // Drop markers
       PLACES.forEach((p) => {

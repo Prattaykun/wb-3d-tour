@@ -16,7 +16,7 @@ export default function WBMap() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [distanceSetting, setDistanceSetting] = useState<number>(2);
-  const [tourMode, setTourMode] = useState(false);
+  const [tourMode, setTourMode] = useState(true);
   const [tourPaused, setTourPaused] = useState(false);
 
   const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
@@ -47,6 +47,23 @@ export default function WBMap() {
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
     map.setMaxBounds(WEST_BENGAL_BOUNDS);
 
+// ✅ wrap border logic
+map.on('load', () => {
+  map.addSource('wbBorder', {
+    type: 'geojson',
+    data: '/geo/west_bengal_border.geojson'
+  });
+  map.addLayer({
+    id: 'wbBorderLine',
+    type: 'line',
+    source: 'wbBorder',
+    paint: {
+      'line-color': '#0be2f9ff',
+      'line-width': 2
+    }
+  });
+});
+
     PLACES.forEach((p) => {
       const icon = document.createElement('div');
       icon.innerHTML = `
@@ -72,7 +89,7 @@ export default function WBMap() {
       mapRef.current = null;
     };
   }, []);
-
+  const isMobile = window.innerWidth <= 500;
   // Auto-tour mode
   useEffect(() => {
     if (!tourMode || !mapRef.current) return;
@@ -93,7 +110,7 @@ export default function WBMap() {
       });
       setActiveId(place.id);
       idx++;
-      timeout = setTimeout(flyNext, 10000); // Wait 10s
+      timeout = setTimeout(flyNext, 7000); // Wait 7s
     };
 
     flyNext();
@@ -109,7 +126,7 @@ export default function WBMap() {
   return (
     <div className="flex flex-col w-full h-[100vh] relative">
       {/* Top-left controls */}
-      <div className="absolute top-4 left-4 bg-white p-2 rounded-md shadow z-10 flex flex-wrap gap-2 items-center">
+      <div className="absolute top-4 left-4 bg-black p-2 rounded-md shadow z-10 flex flex-wrap gap-2 items-center">
         <label className="text-xs">Radius:</label>
         <select
           value={distanceSetting}
@@ -126,20 +143,28 @@ export default function WBMap() {
         <input type="checkbox" checked={tourMode} onChange={() => setTourMode(!tourMode)} />
         {tourMode && (
           <button
-            onClick={() => setTourPaused((p) => !p)}
-            className="text-xs bg-blue-100 px-2 py-1 rounded"
+        onClick={() => setTourPaused((p) => !p)}
+        className="text-xs bg-blue-100 px-2 py-1 rounded text-gray-800 font-semibold"
           >
-            {tourPaused ? '▶️ Play' : '⏸️ Pause'}
+        {tourPaused ? '▶️ Play' : '⏸️ Pause'}
           </button>
         )}
       </div>
 
       {/* Map */}
-      <div ref={containerRef} className="flex-grow w-full h-full" />
+      <div ref={containerRef} className="flex-grow w-full h-full max-[500px]:h-[50vh]" />
 
       {/* Info Panel */}
       {activePlace && (
-        <div className="absolute right-0 top-0 h-full w-full lg:w-[360px] bg-white shadow-lg p-4 overflow-y-auto z-20">
+      <div
+        className="
+           absolute right-0 top-0
+            lg:top-0 
+            h-full lg:h-full 
+            w-full lg:w-[360px]
+            bg-black shadow-lg p-4 overflow-y-auto z-20
+            max-[500px]:bottom-0 max-[500px]:top-auto max-[500px]:h-[50vh]"
+        >
           <button
             className="text-xs text-red-500 absolute right-4 top-4"
             onClick={() => setActiveId(null)}

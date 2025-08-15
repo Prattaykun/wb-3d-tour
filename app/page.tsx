@@ -89,7 +89,6 @@ map.on('load', () => {
       mapRef.current = null;
     };
   }, []);
-  const isMobile = window.innerWidth <= 500;
   // Auto-tour mode
   useEffect(() => {
     if (!tourMode || !mapRef.current) return;

@@ -6,10 +6,10 @@ import { PLACES, HOTELS } from '../shared/west-bengal-data';
 
 const MAP_STYLE =
   'https://api.maptiler.com/maps/0198af0b-fbe1-7f50-a185-309898d6f3d8/style.json?key=1tMBnuPMA9Xr8NFzcajb';
-const WEST_BENGAL_BOUNDS: [number, number][] = [
-  [85.75, 20.8],
-  [90.8, 27.5],
+const WEST_BENGAL_BOUNDS: [number, number, number, number] = [
+  85.75, 20.8, 90.8, 27.5
 ];
+
 
 export default function WBMap() {
   const mapRef = useRef<Map | null>(null);

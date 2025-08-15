@@ -45,7 +45,7 @@ export default function WBMap() {
         type: 'line',
         source: 'wbBorder',
         paint: {
-         'line-color': '#e11d48',
+         'line-color': '#04f2deff',
           'line-width': 2
         }
         });

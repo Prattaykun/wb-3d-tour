@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from 'react';
 import { PLACES, HOTELS } from '../shared/west-bengal-data';
 
 // Using MapTiler free style (you can create an account and get a key)
-const MAP_STYLE = 'https://api.maptiler.com/maps/satellite/style.json?key=1tMBnuPMA9Xr8NFzcajb';
+const MAP_STYLE = 'https://api.maptiler.com/maps/0198af0b-fbe1-7f50-a185-309898d6f3d8/style.json?key=1tMBnuPMA9Xr8NFzcajb';
 
 const WEST_BENGAL_BOUNDS: LngLatBoundsLike = [
   [85.75, 20.8],

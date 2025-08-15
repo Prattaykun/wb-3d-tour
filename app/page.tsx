@@ -163,7 +163,7 @@ map.on('load', () => {
             h-full lg:h-full 
             w-full lg:w-[360px]
             bg-black shadow-lg p-4 overflow-y-auto z-20
-            max-[500px]:bottom-0 max-[500px]:top-auto max-[500px]:h-[50vh]"
+            max-[500px]:bottom-0 max-[500px]:top-auto max-[500px]:h-[44vh]"
         >
           <button
             className="text-xs text-red-500 absolute right-4 top-4"

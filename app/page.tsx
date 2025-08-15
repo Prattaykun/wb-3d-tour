@@ -1,13 +1,12 @@
 'use client';
-import maplibregl, { Map, Marker, LngLatBoundsLike, Popup } from 'maplibre-gl';
+import maplibregl, { Map, Marker, Popup } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
 import { PLACES, HOTELS } from '../shared/west-bengal-data';
 
-// Using MapTiler free style (you can create an account and get a key)
-const MAP_STYLE = 'https://api.maptiler.com/maps/0198af0b-fbe1-7f50-a185-309898d6f3d8/style.json?key=1tMBnuPMA9Xr8NFzcajb';
-
-const WEST_BENGAL_BOUNDS: LngLatBoundsLike = [
+const MAP_STYLE =
+  'https://api.maptiler.com/maps/0198af0b-fbe1-7f50-a185-309898d6f3d8/style.json?key=1tMBnuPMA9Xr8NFzcajb';
+const WEST_BENGAL_BOUNDS: [number, number][] = [
   [85.75, 20.8],
   [90.8, 27.5],
 ];
@@ -16,6 +15,21 @@ export default function WBMap() {
   const mapRef = useRef<Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [distanceSetting, setDistanceSetting] = useState<number>(2);
+  const [tourMode, setTourMode] = useState(false);
+  const [tourPaused, setTourPaused] = useState(false);
+
+  const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -25,44 +39,31 @@ export default function WBMap() {
       style: MAP_STYLE,
       center: [88.3639, 22.5726],
       zoom: 5.7,
-      pitch: 50, // tilt camera for a pseudo-3D feel
+      pitch: 50,
       bearing: -20,
     });
     mapRef.current = map;
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    map.setMaxBounds(WEST_BENGAL_BOUNDS);
 
-    map.on('load', () => {
-      // Constrain initial bounds
-      map.setMaxBounds(WEST_BENGAL_BOUNDS);
-         map.addSource('wbBorder', {
-         type: 'geojson',
-        data: '/geo/west_bengal_border.geojson'
-        });
+    PLACES.forEach((p) => {
+      const icon = document.createElement('div');
+      icon.innerHTML = `
+        <svg height="24" width="24" viewBox="0 0 24 24">
+          <path fill="#e11d48" d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z"/>
+        </svg>`;
+      icon.className = 'cursor-pointer';
 
-        map.addLayer({
-        id: 'wbBorderLine',
-        type: 'line',
-        source: 'wbBorder',
-        paint: {
-         'line-color': '#04f2deff',
-          'line-width': 2
-        }
-        });
+      const marker = new Marker({ element: icon }).setLngLat([p.lon, p.lat]).addTo(map);
 
-      // Drop markers
-      PLACES.forEach((p) => {
-        const el = document.createElement('div');
-        el.className = 'rounded-full bg-rose-600 shadow-lg w-3 h-3 ring-2 ring-white cursor-pointer';
-        const marker = new Marker({ element: el }).setLngLat([p.lon, p.lat]).addTo(map);
-        marker.getElement().addEventListener('click', () => {
-          setActiveId(p.id);
-          map.flyTo({ center: [p.lon, p.lat], zoom: 12, pitch: 60, bearing: -10, essential: true });
-          new Popup({ offset: 12 })
-            .setLngLat([p.lon, p.lat])
-            .setHTML(`<div style="font-weight:600">${p.name}</div><div style="font-size:12px">${p.city ?? ''}</div>`)
-            .addTo(map);
-        });
+      marker.getElement().addEventListener('click', () => {
+        setActiveId(p.id);
+        map.flyTo({ center: [p.lon, p.lat], zoom: 12, pitch: 60, bearing: -10, essential: true });
+        new Popup({ offset: 12 })
+          .setLngLat([p.lon, p.lat])
+          .setHTML(`<div style="font-weight:600">${p.name}</div><div style="font-size:12px">${p.city ?? ''}</div>`)
+          .addTo(map);
       });
     });
 
@@ -72,14 +73,113 @@ export default function WBMap() {
     };
   }, []);
 
+  // Auto-tour mode
+  useEffect(() => {
+    if (!tourMode || !mapRef.current) return;
+
+    let idx = 0;
+    let timeout: NodeJS.Timeout;
+
+    const flyNext = () => {
+      if (tourPaused) return;
+
+      const place = PLACES[idx % PLACES.length];
+      mapRef.current!.flyTo({
+        center: [place.lon, place.lat],
+        zoom: 12,
+        pitch: 55,
+        bearing: -15,
+        essential: true,
+      });
+      setActiveId(place.id);
+      idx++;
+      timeout = setTimeout(flyNext, 10000); // Wait 10s
+    };
+
+    flyNext();
+    return () => clearTimeout(timeout);
+  }, [tourMode, tourPaused]);
+
   const activePlace = PLACES.find((p) => p.id === activeId);
-  const hotels = HOTELS.filter((h) => h.nearPlaceId === activeId);
+  const hotelsWithinRadius = HOTELS.filter((h) => {
+    if (!activePlace) return false;
+    return haversine(activePlace.lat, activePlace.lon, h.lat, h.lon) <= distanceSetting;
+  });
 
   return (
-    <div className="w-full h-[100vh] grid grid-cols-1 lg:grid-cols-[1fr_380px]">
-      <div ref={containerRef} className="w-full h-full" />
-      {/* side panel same as before */}
-      {/* ---- You can keep the same JSX for the side panel and hotel info ---- */}
+    <div className="flex flex-col w-full h-[100vh] relative">
+      {/* Top-left controls */}
+      <div className="absolute top-4 left-4 bg-white p-2 rounded-md shadow z-10 flex flex-wrap gap-2 items-center">
+        <label className="text-xs">Radius:</label>
+        <select
+          value={distanceSetting}
+          onChange={(e) => setDistanceSetting(Number(e.target.value))}
+          className="border text-xs p-1"
+        >
+          <option value={0.3}>300 m</option>
+          <option value={1}>1 km</option>
+          <option value={2}>2 km</option>
+          <option value={3}>3 km</option>
+          <option value={5}>5 km</option>
+        </select>
+        <label className="text-xs">Tour Guide</label>
+        <input type="checkbox" checked={tourMode} onChange={() => setTourMode(!tourMode)} />
+        {tourMode && (
+          <button
+            onClick={() => setTourPaused((p) => !p)}
+            className="text-xs bg-blue-100 px-2 py-1 rounded"
+          >
+            {tourPaused ? '▶️ Play' : '⏸️ Pause'}
+          </button>
+        )}
+      </div>
+
+      {/* Map */}
+      <div ref={containerRef} className="flex-grow w-full h-full" />
+
+      {/* Info Panel */}
+      {activePlace && (
+        <div className="absolute right-0 top-0 h-full w-full lg:w-[360px] bg-white shadow-lg p-4 overflow-y-auto z-20">
+          <button
+            className="text-xs text-red-500 absolute right-4 top-4"
+            onClick={() => setActiveId(null)}
+          >
+            ✕ Close
+          </button>
+          <h3 className="text-xl font-semibold mt-4">{activePlace.name}</h3>
+          <p className="text-xs text-gray-500 mb-2">
+            {activePlace.city} • {activePlace.category}
+          </p>
+          {activePlace.description && (
+            <p className="text-sm text-gray-700">{activePlace.description}</p>
+          )}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${activePlace.lat},${activePlace.lon}`}
+            target="_blank"
+            className="text-blue-600 underline mt-2 inline-block text-sm"
+          >
+            Navigate in Google Maps
+          </a>
+
+          <h4 className="mt-4 font-semibold">
+            Hotels within {distanceSetting} km
+          </h4>
+          {!hotelsWithinRadius.length ? (
+            <p className="text-sm text-gray-500 mt-1">No hotels in range.</p>
+          ) : (
+            <ul className="mt-2 space-y-2">
+              {hotelsWithinRadius.map((h) => (
+                <li key={h.id} className="border rounded-lg p-2 hover:shadow text-sm">
+                  <div className="font-medium">{h.name}</div>
+                  {h.rating && (
+                    <div className="text-xs text-gray-500">Rating: {h.rating}★</div>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
     </div>
   );
 }

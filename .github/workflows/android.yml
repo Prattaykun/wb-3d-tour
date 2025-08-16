@@ -1,13 +1,12 @@
-name: Android CI/CD
+name: Android CI
 
 on:
   push:
     branches:
-      - MyChoice
+      - main
   pull_request:
     branches:
-      - MyChoice
-
+      - main
   workflow_dispatch:
 
 jobs:
@@ -36,10 +35,13 @@ jobs:
             gradle-${{ runner.os }}-
 
       - name: Grant execute permission for gradlew
-        run: chmod +x android/gradlew
+        run: chmod +x gradlew
+        working-directory: android
 
       - name: Build with Gradle
-        run: android/gradlew build
+        run: ./gradlew build
+        working-directory: android
 
       - name: Run unit tests
-        run: android/gradlew test
+        run: ./gradlew test
+        working-directory: android

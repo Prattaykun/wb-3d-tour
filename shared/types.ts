@@ -7,7 +7,10 @@ export type PlaceCategory =
   | 'Nature'
   | 'Fort'
   | 'Beach'
-  | 'Market';
+  | 'Market'
+  |'Wildlife'
+  |'Village'
+  |'Town';
 
 export interface PlaceSpec {
   id: string;
@@ -19,7 +22,7 @@ export interface PlaceSpec {
   images?: string[];
   description?: string;
   tips?: string[];
-  entryFeeINR?: number | 'Free';
+  entryFeeINR?: number | 'Free'|string;
   hours?: string;
 }
 
@@ -31,4 +34,5 @@ export interface Hotel {
   rating?: number;
   priceBand?: 'Budget' | 'Mid' | 'Premium';
   nearPlaceId?: string;
+  city?:string;
 }

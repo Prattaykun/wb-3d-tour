@@ -41,8 +41,7 @@ jobs:
           -configuration Release \
           archive \
           -archivePath build/WBTour.xcarchive \
-          DEVELOPMENT_TEAM="WBT12345AB" \
-          CODE_SIGN_STYLE=Automatic
+          CODE_SIGNING_ALLOWED=NO
       working-directory: ./ios/App/
 
 

@@ -202,8 +202,21 @@ map.on('load', () => {
               ))}
             </ul>
           )}
+            {activePlace.images && activePlace.images.length > 0 && (
+             <div className="mt-4 flex flex-wrap gap-2">
+               {activePlace.images.map((imgSrc: string, idx: number) => (
+                <img
+                  key={idx}
+                  src={imgSrc.startsWith('http') ? imgSrc : imgSrc}   // already clean path now
+                  alt={`${activePlace.name} image ${idx + 1}`}
+                  className="rounded-lg w-full h-auto max-h-[200px] object-cover"
+                />
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
-}
+} 
+

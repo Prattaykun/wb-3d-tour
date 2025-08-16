@@ -12,7 +12,7 @@ export const PLACES: PlaceSpec[] = [
     lat: 22.5448,
     lon: 88.3426,
     city: 'Kolkata',
-    images: ['https://images.unsplash.com/photo-1583311544843-6f03ba0dfb68'],
+    images: ['/media/victoria.webp'],  // ✅ correct path
     description: 'Iconic marble museum and gardens dedicated to Queen Victoria; blend of British and Mughal elements.',
     tips: ['Best light at golden hour', 'Closed Mondays'],
     entryFeeINR: 30,
@@ -25,7 +25,7 @@ export const PLACES: PlaceSpec[] = [
     lat: 22.6556,
     lon: 88.3570,
     city: 'Kolkata',
-    images: ['https://images.unsplash.com/photo-1595059225291-61e7d05f7b22'],
+    images: ['/media/dakhineswar.jpg'],  // ✅ correct path
     description: '19th‑century riverside temple complex dedicated to Goddess Kali on the Hooghly.',
     tips: ['Dress modestly', 'Early mornings less crowded'],
     entryFeeINR: 'Free',
@@ -38,7 +38,7 @@ export const PLACES: PlaceSpec[] = [
     lat: 23.0737,
     lon: 87.3216,
     city: 'Bishnupur',
-    images: ['https://images.unsplash.com/photo-1601042879364-e5b2215d78e4'],
+    images: ['/media/bishnupur-terracotta.jpg'],  // ✅ correct path
     description: 'Famed terracotta temples (17th–18th c.) with intricate panels depicting epics and local life.',
     tips: ['Hire a local guide', 'Carry water, summers are hot'],
     entryFeeINR: 50,
@@ -51,7 +51,7 @@ export const PLACES: PlaceSpec[] = [
     lat: 21.9497,
     lon: 88.833,
     city: 'South 24 Parganas',
-    images: ['https://images.unsplash.com/photo-1603537002605-0d0b8b7c47e0'],
+    images: ['media/sundarbans.webp'],  // ✅ correct path
     description: 'World’s largest mangrove forest and Royal Bengal Tiger habitat; boat safaris via Gosaba, Godkhali.',
     tips: ['Permits required', 'Best Nov–Feb'],
     entryFeeINR: 100,

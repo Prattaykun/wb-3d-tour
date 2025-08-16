@@ -126,11 +126,11 @@ map.on('load', () => {
     <div className="flex flex-col w-full h-[100vh] relative">
       {/* Top-left controls */}
       <div className="absolute top-4 left-4 bg-black p-2 rounded-md shadow z-10 flex flex-wrap gap-2 items-center">
-        <label className="text-xs">Radius:</label>
+        <label className="text-xs text-gray-400">Radius:</label>
         <select
           value={distanceSetting}
           onChange={(e) => setDistanceSetting(Number(e.target.value))}
-          className="border text-xs p-1"
+          className="border text-xs p-1 text-gray-400"
         >
           <option value={0.3}>300 m</option>
           <option value={1}>1 km</option>
@@ -138,7 +138,7 @@ map.on('load', () => {
           <option value={3}>3 km</option>
           <option value={5}>5 km</option>
         </select>
-        <label className="text-xs">Tour Guide</label>
+        <label className="text-xs text-gray-400">Tour Guide</label>
         <input type="checkbox" checked={tourMode} onChange={() => setTourMode(!tourMode)} />
         {tourMode && (
           <button
@@ -170,33 +170,33 @@ map.on('load', () => {
           >
             ✕ Close
           </button>
-          <h3 className="text-xl font-semibold mt-4">{activePlace.name}</h3>
-          <p className="text-xs text-gray-500 mb-2">
+          <h3 className="text-xl font-semibold mt-4 text-gray-400">{activePlace.name}</h3>
+          <p className="text-xs text-gray-400 mb-2">
             {activePlace.city} • {activePlace.category}
           </p>
           {activePlace.description && (
-            <p className="text-sm text-gray-700">{activePlace.description}</p>
+            <p className="text-sm text-gray-400">{activePlace.description}</p>
           )}
           <a
             href={`https://www.google.com/maps/search/?api=1&query=${activePlace.lat},${activePlace.lon}`}
             target="_blank"
-            className="text-blue-600 underline mt-2 inline-block text-sm"
+            className="text-gray-400 underline mt-2 inline-block text-sm"
           >
             Navigate in Google Maps
           </a>
 
           <h4 className="mt-4 font-semibold">
-            Hotels within {distanceSetting} km
+            <span className="text-gray-400">Hotels within {distanceSetting} km</span>
           </h4>
           {!hotelsWithinRadius.length ? (
-            <p className="text-sm text-gray-500 mt-1">No hotels in range.</p>
+            <p className="text-sm text-gray-400 mt-1">No hotels in range.</p>
           ) : (
             <ul className="mt-2 space-y-2">
               {hotelsWithinRadius.map((h) => (
                 <li key={h.id} className="border rounded-lg p-2 hover:shadow text-sm">
-                  <div className="font-medium">{h.name}</div>
+                  <div className="font-medium text-gray-400">{h.name}</div>
                   {h.rating && (
-                    <div className="text-xs text-gray-500">Rating: {h.rating}★</div>
+                    <div className="text-xs text-gray-400">Rating: {h.rating}★</div>
                   )}
                 </li>
               ))}

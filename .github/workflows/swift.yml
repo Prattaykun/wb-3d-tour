@@ -42,7 +42,7 @@ jobs:
           archive \
           -archivePath build/WBTour.xcarchive \
           CODE_SIGNING_ALLOWED=NO
-      working-directory: ./ios/App/
+      working-directory: ./ios/
 
 
     - name: Export IPA

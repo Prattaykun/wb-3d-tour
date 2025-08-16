@@ -30,8 +30,8 @@ jobs:
       run: npm ci
 
     - name: Install CocoaPods dependencies
-      run: pod install --repo-update
-   #   working-directory: ./ios/App/
+      run: pod install
+      working-directory: ./ios/App/
 
     - name: Build and Archive
       run: |

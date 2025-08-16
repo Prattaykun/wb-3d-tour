@@ -50,7 +50,7 @@ jobs:
         xcodebuild -exportArchive \
           -archivePath build/WBTour.xcarchive \
           -exportPath build/ipa \
-          -exportOptionsPlist ExportOptions.plist
+          -exportOptionsPlist Info.plist
       working-directory: ./ios/App/
 
     - name: Upload IPA artifact

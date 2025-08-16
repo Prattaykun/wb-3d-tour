@@ -42,6 +42,7 @@ jobs:
           archive \
           -archivePath build/WBTour.xcarchive \
           CODE_SIGNING_ALLOWED=NO
+          DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }}
       working-directory: ./ios/App
 
 
@@ -51,6 +52,7 @@ jobs:
           -archivePath build/WBTour.xcarchive \
           -exportPath build/ipa \
           -exportOptionsPlist App/Info.plist
+          DEVELOPMENT_TEAM=${{ secrets.APPLE_TEAM_ID }}
       working-directory: ./ios/App/
 
     - name: Upload IPA artifact

@@ -156,7 +156,7 @@ export const PLACES: PlaceSpec[] = [
   lat: 26.6882,
   lon: 89.2755,
   city: 'Madarihat',
-  images: ['/media/jaldapara-wildlife.jpg','/media/Jaldpara-Tourism.jpg'],
+  images: ['/media/jaldapara-wildlife.jpg','/media/Jaldpara-Tourism.jpg','/media/Jaldpara-Tourism.jpg'],
   description: 'National park famous for Indian one-horned rhinos, elephants, and Bengal florican.',
   tips: ['Book elephant safari early', 'Excellent for birdwatching'],
   entryFeeINR: 100,

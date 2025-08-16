@@ -41,10 +41,10 @@ jobs:
           -configuration Release \
           archive \
           -archivePath build/WBTour.xcarchive \
-          CODE_SIGN_IDENTITY="Apple Distribution: West Bengal Tourism (WBT12345AB)" \
-          PROVISIONING_PROFILE_SPECIFIER="WBTour_Provisioning_Profile" \
-          DEVELOPMENT_TEAM="WBT12345AB"
+          DEVELOPMENT_TEAM="WBT12345AB" \
+          CODE_SIGN_STYLE=Automatic
       working-directory: ./ios/App/
+
 
     - name: Export IPA
       run: |

@@ -29,9 +29,6 @@ jobs:
     - name: Install dependencies
       run: npm ci
 
-    - name: Capacitor Sync iOS
-      run: npx cap sync ios
-
     - name: Install CocoaPods dependencies
       run: pod install --repo-update
       working-directory: ./ios/App/

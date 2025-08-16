@@ -31,7 +31,7 @@ jobs:
 
     - name: Install CocoaPods dependencies
       run: pod install --repo-update
-      working-directory: ./ios/App/
+   #   working-directory: ./ios/App/
 
     - name: Build and Archive
       run: |
@@ -42,7 +42,7 @@ jobs:
           archive \
           -archivePath build/WBTour.xcarchive \
           CODE_SIGNING_ALLOWED=NO
-      working-directory: ./ios/App/
+      #working-directory: ./ios/App/
 
 
     - name: Export IPA
@@ -51,7 +51,7 @@ jobs:
           -archivePath build/WBTour.xcarchive \
           -exportPath build/ipa \
           -exportOptionsPlist ExportOptions.plist
-      working-directory: ./ios/App/
+     # working-directory: ./ios/App/
 
     - name: Upload IPA artifact
       uses: actions/upload-artifact@v4

@@ -9,8 +9,12 @@ export type PlaceCategory =
   | 'Beach'
   | 'Market'
   |'Wildlife'
+  |'National Park'
   |'Village'
-  |'Town';
+  |'Town'
+  |'Viewpoint'
+  |'Cultural Site'
+  |'Pilgrimage';
 
 export interface PlaceSpec {
   id: string;

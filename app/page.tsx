@@ -1,6 +1,8 @@
 "use client"
 
 import { motion } from "framer-motion"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import {
   Search,
   MapPin,
@@ -26,6 +28,7 @@ import { useState } from "react"
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const router = useRouter()
 
   const destinationCategories = [
     {
@@ -327,7 +330,10 @@ export default function Home() {
               className="flex-1 bg-transparent border-none outline-none text-slate-700 text-lg placeholder:text-slate-400 font-medium"
             />
           </div>
-          <Button className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 hover:from-teal-600 hover:via-cyan-600 hover:to-teal-700 text-white rounded-2xl px-8 py-4 shadow-lg shadow-teal-500/25 transition-all duration-300 hover:scale-105 hover:shadow-xl font-semibold text-lg w-full sm:w-auto">
+          <Button
+            className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 hover:from-teal-600 hover:via-cyan-600 hover:to-teal-700 text-white rounded-2xl px-8 py-4 shadow-lg shadow-teal-500/25 transition-all duration-300 hover:scale-105 hover:shadow-xl font-semibold text-lg w-full sm:w-auto"
+            onClick={() => router.push("/frontpage")}
+          >
             Search
             <ArrowRight className="w-5 h-5 ml-2" />
           </Button>

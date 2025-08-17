@@ -29,6 +29,8 @@ const ICON_MAP: Record<PlaceCategory, string> = {
   Viewpoint: '<img src="/media/icons/viewpoint.png" width="30" height="30" alt="Viewpoint" />',
   'Cultural Site': '<img src="/media/icons/cultural-site.png" width="30" height="30" alt="Cultural Site" />',
   Pilgrimage: '<img src="/media/icons/pilgrimage.png" width="30" height="30" alt="Pilgrimage" />',
+  Archaeological: '<img src="/media/icons/a.png" width="30" height="30" alt="Archaeological" />',
+  Hillstation: '<img src="/media/icons/mountain.png" width="30" height="30" alt="Mountains" />',
 };
 
 export default function WBMap() {
@@ -253,7 +255,7 @@ export default function WBMap() {
                   href={`https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lon}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block border rounded-lg p-2 hover:shadow text-sm flex flex-col gap-1 cursor-pointer hover:bg-blue-50 transition"
+                  className="border rounded-lg p-2 hover:shadow text-sm flex flex-col gap-1 cursor-pointer hover:bg-blue-50 transition"
                 >
                   <div className="font-medium text-gray-400">{h.name}</div>
                   {h.rating && (

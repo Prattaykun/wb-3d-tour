@@ -16,7 +16,9 @@ export type PlaceCategory =
   |'Town'
   |'Viewpoint'
   |'Cultural Site'
-  |'Pilgrimage';
+  |'Pilgrimage'
+  |'Archaeological'
+  | 'Hillstation';
 
 export interface PlaceSpec {
   id: string;

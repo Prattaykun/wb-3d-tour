@@ -1,149 +1,272 @@
-"use client";
+'use client';
+import maplibregl, { Map, Marker, Popup } from 'maplibre-gl';
+import 'maplibre-gl/dist/maplibre-gl.css';
+import { useEffect, useRef, useState } from 'react';
+import { PLACES, HOTELS } from '../../shared/west-bengal-data';
+import { PlaceCategory } from '../../shared/types';
 
-import { motion } from "framer-motion";
-import { Search, MapPin, Compass, Stars, Plane } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+const MAP_STYLE =
+  'https://api.maptiler.com/maps/0198af0b-fbe1-7f50-a185-309898d6f3d8/style.json?key=1tMBnuPMA9Xr8NFzcajb';
+const WEST_BENGAL_BOUNDS: [number, number, number, number] = [
+  85.75, 20.8, 90.8, 27.5
+];
 
-export default function Home() {
+// ✅ SVG icons for categories
+const ICON_MAP: Record<PlaceCategory, string> = {
+  Heritage: '<img src="/media/icons/heritage.png" width="24" height="24" alt="Heritage" />',
+  Temple: '<img src="/media/icons/temple.png" width="24" height="24" alt="Temple" />',
+  Museum: '<img src="/media/icons/museum.png" width="24" height="24" alt="Museum" />',
+  Nature: '<img src="/media/icons/nature.png" width="30" height="30" alt="Nature" />',
+  Fort: '<img src="/media/icons/fort.png" width="24" height="24" alt="Fort" />',
+  Beach: '<img src="/media/icons/beach.png" width="38" height="38" alt="Beach" />',
+  Market: '<img src="/media/icons/market.png" width="38" height="38" alt="Market" />',
+  Park: '<img src="/media/icons/park.png" width="38" height="38" alt="Park" />',
+  Transport: '<img src="/media/icons/transport.png" width="30" height="30" alt="Transport" />',
+  Wildlife: '<img src="/media/icons/wildlife.png" width="30" height="30" alt="Wildlife" />',
+  'National Park': '<img src="/media/icons/national-park.png" width="30" height="30" alt="National Park" />',
+  Village: '<img src="/media/icons/village.png" width="40" height="40" alt="Village" />',
+  Town: '<img src="/media/icons/town.png" width="30" height="30" alt="Town" />',
+  Viewpoint: '<img src="/media/icons/viewpoint.png" width="30" height="30" alt="Viewpoint" />',
+  'Cultural Site': '<img src="/media/icons/cultural-site.png" width="30" height="30" alt="Cultural Site" />',
+  Pilgrimage: '<img src="/media/icons/pilgrimage.png" width="30" height="30" alt="Pilgrimage" />',
+};
+
+export default function WBMap() {
+  const mapRef = useRef<Map | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const [distanceSetting, setDistanceSetting] = useState<number>(2);
+  const [tourMode, setTourMode] = useState(true);
+  const [tourPaused, setTourPaused] = useState(false);
+
+  // ✅ keep track of hotel markers
+  const hotelMarkersRef = useRef<Marker[]>([]);
+
+  const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const toRad = (x: number) => (x * Math.PI) / 180;
+    const R = 6371;
+    const dLat = toRad(lat2 - lat1);
+    const dLon = toRad(lon2 - lon1);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+
+    const map = new maplibregl.Map({
+      container: containerRef.current,
+      style: MAP_STYLE,
+      center: [88.3639, 22.5726],
+      zoom: 5.7,
+      pitch: 50,
+      bearing: -20,
+    });
+    mapRef.current = map;
+
+    map.addControl(new maplibregl.NavigationControl(), 'top-right');
+    map.setMaxBounds(WEST_BENGAL_BOUNDS);
+
+    map.on('load', () => {
+      map.addSource('wbBorder', {
+        type: 'geojson',
+        data: '/geo/west_bengal_border.geojson'
+      });
+      map.addLayer({
+        id: 'wbBorderLine',
+        type: 'line',
+        source: 'wbBorder',
+        paint: {
+          'line-color': '#0be2f9ff',
+          'line-width': 2
+        }
+      });
+    });
+
+    PLACES.forEach((p) => {
+      const icon = document.createElement('div');
+      icon.innerHTML = ICON_MAP[p.category] ?? ICON_MAP['Heritage'];
+      icon.className = 'cursor-pointer';
+
+      const marker = new Marker({ element: icon }).setLngLat([p.lon, p.lat]).addTo(map);
+
+      marker.getElement().addEventListener('click', () => {
+        setActiveId(p.id);
+        map.flyTo({ center: [p.lon, p.lat], zoom: 12, pitch: 60, bearing: -10, essential: true });
+        new Popup({ offset: 12 })
+          .setLngLat([p.lon, p.lat])
+          .setHTML(`<div style="font-weight:600">${p.name}</div><div style="font-size:12px">${p.city ?? ''}</div>`)
+          .addTo(map);
+      });
+    });
+
+    return () => {
+      map.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // ✅ Add/remove hotel markers when active place changes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // clear old markers
+    hotelMarkersRef.current.forEach((m) => m.remove());
+    hotelMarkersRef.current = [];
+
+    const activePlace = PLACES.find((p) => p.id === activeId);
+    if (!activePlace) return;
+
+    const hotelsWithinRadius = HOTELS.filter((h) =>
+      haversine(activePlace.lat, activePlace.lon, h.lat, h.lon) <= distanceSetting
+    );
+
+    hotelsWithinRadius.forEach((h) => {
+      const el = document.createElement('div');
+      el.innerHTML = `<img src="/media/icons/hotel.png" width="30" height="30" alt="Hotel" />`;
+      const m = new Marker({ element: el }).setLngLat([h.lon, h.lat]).addTo(mapRef.current!);
+      hotelMarkersRef.current.push(m);
+    });
+  }, [activeId, distanceSetting]);
+
+  // (Tour logic unchanged)
+  useEffect(() => {
+    if (!tourMode || !mapRef.current) return;
+
+    let idx = 0;
+    let timeout: NodeJS.Timeout;
+
+    const flyNext = () => {
+      if (tourPaused) return;
+      const place = PLACES[idx % PLACES.length];
+      mapRef.current!.flyTo({
+        center: [place.lon, place.lat],
+        zoom: 12,
+        pitch: 55,
+        bearing: -15,
+        essential: true,
+      });
+      setActiveId(place.id);
+      idx++;
+      timeout = setTimeout(flyNext, 7000);
+    };
+
+    flyNext();
+    return () => clearTimeout(timeout);
+  }, [tourMode, tourPaused]);
+
+  const activePlace = PLACES.find((p) => p.id === activeId);
+  const hotelsWithinRadius = HOTELS.filter((h) => {
+    if (!activePlace) return false;
+    return haversine(activePlace.lat, activePlace.lon, h.lat, h.lon) <= distanceSetting;
+  });
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-rose-50 via-pink-50 to-white relative overflow-x-hidden">
-      {/* Watermark */}
-      <div className="absolute top-2 right-4 text-xs text-gray-400 select-none tracking-widest">
-        DGPRC.pvt
+    <div className="flex flex-col w-full h-[100vh] relative">
+      {/* Top-left controls */}
+      <div className="absolute top-4 left-4 bg-black p-2 rounded-md shadow z-10 flex flex-wrap gap-2 items-center">
+        <label className="text-xs text-gray-400">Radius:</label>
+        <select
+          value={distanceSetting}
+          onChange={(e) => setDistanceSetting(Number(e.target.value))}
+          className="border text-xs p-1 text-gray-400"
+        >
+          <option value={0.3}>300 m</option>
+          <option value={1}>1 km</option>
+          <option value={2}>2 km</option>
+          <option value={3}>3 km</option>
+          <option value={5}>5 km</option>
+        </select>
+        <label className="text-xs text-gray-400">Tour Guide</label>
+        <input type="checkbox" checked={tourMode} onChange={() => setTourMode(!tourMode)} />
+        {tourMode && (
+          <button
+        onClick={() => setTourPaused((p) => !p)}
+        className="text-xs bg-blue-100 px-2 py-1 rounded text-gray-800 font-semibold"
+          >
+        {tourPaused ? '▶️ Play' : '⏸️ Pause'}
+          </button>
+        )}
       </div>
 
-      {/* Navbar */}
-      <nav className="flex justify-between items-center p-6 md:px-20 backdrop-blur-md bg-white/60 sticky top-0 z-50 shadow-sm">
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-3xl font-extrabold bg-gradient-to-r from-rose-500 to-pink-600 bg-clip-text text-transparent drop-shadow-sm"
-        >
-          WB Tour
-        </motion.h1>
-        <div className="hidden md:flex space-x-8 text-gray-700 font-medium">
-          <a href="#destinations" className="hover:text-rose-600 transition">Destinations</a>
-          <a href="#how-it-works" className="hover:text-rose-600 transition">How It Works</a>
-          <a href="#contact" className="hover:text-rose-600 transition">Contact</a>
-        </div>
-      </nav>
+      {/* Map */}
+      <div ref={containerRef} className="flex-grow w-full h-full max-[500px]:h-[50vh]" />
 
-      {/* Hero Section */}
-      <section className="text-center py-24 px-6 relative">
-        <motion.h2
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-4xl md:text-6xl font-extrabold leading-tight bg-gradient-to-r from-pink-500 via-rose-500 to-red-500 bg-clip-text text-transparent drop-shadow-lg"
+      {/* Info Panel */}
+      {activePlace && (
+      <div
+        className="
+           absolute right-0 top-0
+            lg:top-0 
+            h-full lg:h-full 
+            w-full lg:w-[360px]
+            bg-black shadow-lg p-4 overflow-y-auto z-20
+            max-[500px]:bottom-0 max-[500px]:top-auto max-[500px]:h-[44vh]"
         >
-          Discover the Beauty of West Bengal
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6 text-base sm:text-lg md:text-xl text-gray-700 max-w-3xl mx-auto"
-        >
-          Explore terracotta temples, lush forests, vibrant culture, and scenic landscapes — all in one journey through Bengal.
-        </motion.p>
-
-        {/* Search Bar */}
-        <motion.div
-          initial={{ scale: 0.8, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-10 flex items-center justify-center gap-3 max-w-xl mx-auto bg-white/80 backdrop-blur-md shadow-xl p-4 rounded-2xl border border-rose-100"
-        >
-          <Search className="text-rose-500 w-6 h-6" />
-          <input
-            type="text"
-            placeholder="Search destinations, hotels, or itineraries..."
-            className="flex-1 bg-transparent border-none outline-none text-gray-800 text-sm sm:text-base"
-          />
-          <Button className="bg-gradient-to-r from-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-700 text-white rounded-xl px-6 shadow-md transition">
-            Search
-          </Button>
-        </motion.div>
-      </section>
-
-      {/* Features */}
-      <section className="grid md:grid-cols-3 gap-8 px-6 md:px-20 py-20 text-center">
-        {[
-          { icon: <MapPin className="w-10 h-10 mx-auto text-rose-500" />, title: "Rich Heritage", desc: "Bishnupur’s terracotta temples, Bankura’s traditional art, and cultural landmarks." },
-          { icon: <Compass className="w-10 h-10 mx-auto text-rose-500" />, title: "Nature & Hills", desc: "Experience Susunia Hill, Joypur Forest, Jhilimili, and Garh Panchkot’s scenic beauty." },
-          { icon: <Stars className="w-10 h-10 mx-auto text-rose-500" />, title: "Local Culture", desc: "Immerse yourself in folk art, music, cuisine, and warm hospitality." },
-        ].map((f, i) => (
-          <motion.div
-            key={i}
-            whileHover={{ scale: 1.05 }}
-            className="bg-white shadow-lg hover:shadow-2xl transition rounded-3xl p-10 border border-gray-100"
+          <button
+            className="text-xs text-red-500 absolute right-4 top-4"
+            onClick={() => setActiveId(null)}
           >
-            {f.icon}
-            <h3 className="text-xl md:text-2xl font-bold mt-4 text-gray-800">{f.title}</h3>
-            <p className="text-gray-600 mt-3 text-sm md:text-base">{f.desc}</p>
-          </motion.div>
-        ))}
-      </section>
+            ✕ Close
+          </button>
+          <h3 className="text-xl font-semibold mt-4 text-gray-400">{activePlace.name}</h3>
+          <p className="text-xs text-gray-400 mb-2">
+            {activePlace.city} • {activePlace.category}
+          </p>
+          {activePlace.images && activePlace.images.length > 0 && (
+             <div className="mt-4 flex flex-wrap gap-2">
+               {activePlace.images.map((imgSrc: string, idx: number) => (
+                <img
+                  key={idx}
+                  src={imgSrc.startsWith('http') ? imgSrc : imgSrc}   // already clean path now
+                  alt={`${activePlace.name} image ${idx + 1}`}
+                  className="rounded-lg w-full h-auto max-h-[200px] object-cover"
+                />
+              ))
+              }
+            </div>
+          )}
+          {activePlace.description && (
+            <p className="text-sm text-gray-400">{activePlace.description}</p>
+          )}
+          <a
+            href={`https://www.google.com/maps/search/?api=1&query=${activePlace.lat},${activePlace.lon}`}
+            target="_blank"
+            className="text-gray-400 underline mt-2 inline-block text-sm"
+          >
+            Navigate in Google Maps
+          </a>
 
-      {/* Destinations */}
-      <section id="destinations" className="py-24 px-6 md:px-20 bg-gradient-to-b from-rose-50 to-pink-50">
-        <h2 className="text-3xl md:text-4xl font-bold text-center mb-14 text-rose-600">
-          Top Destinations in West Bengal
-        </h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {[
-            { name: "Bishnupur Terracotta Temples", img: "/media/Bankura/bishnupur-terracotta.jpg" },
-            { name: "Sundarbans Mangroves", img: "/media/sundarbans.webp" },
-            { name: "Raimatang", img: "/media/Alipurduar District/raim.jpg" },
-            { name: "Jaldapara National Park", img: "/media/Alipurduar District/jaldapara-wildlife.jpg" },
-            { name: "New Digha Beach", img: "/media/digha/digha-beach-bay-of-bengal.png" },
-            { name: "Victoria Memorial", img: "/media/victoria-memorial-kolkata.png" },
-          ].map((d, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.05 }}
-              className="bg-white shadow-md hover:shadow-xl transition rounded-3xl overflow-hidden border border-gray-100"
-            >
-              <img src={d.img} alt={d.name} className="h-56 w-full object-cover" />
-              <div className="p-5">
-                <h3 className="text-lg font-semibold text-gray-800">{d.name}</h3>
-                <Button variant="outline" className="mt-4 w-full rounded-xl border-rose-300 hover:bg-rose-50">
-                  Explore
-                </Button>
-              </div>
-            </motion.div>
-          ))}
+          <h4 className="mt-4 font-semibold">
+            <span className="text-gray-400">Hotels within {distanceSetting} km</span>
+          </h4>
+          {!hotelsWithinRadius.length ? (
+            <p className="text-sm text-gray-400 mt-1">No hotels in range.</p>
+          ) : (
+            <ul className="mt-2 space-y-2">
+              {hotelsWithinRadius.map((h) => (
+                <a
+                  key={h.id}
+                  href={`https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lon}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block border rounded-lg p-2 hover:shadow text-sm flex flex-col gap-1 cursor-pointer hover:bg-blue-50 transition"
+                >
+                  <div className="font-medium text-gray-400">{h.name}</div>
+                  {h.rating && (
+                    <div className="text-xs text-gray-400">Rating: {h.rating}★</div>
+                  )}
+                </a>
+              ))}
+            </ul>
+          )}
+            
         </div>
-      </section>
-
-      {/* How It Works */}
-      <section id="how-it-works" className="py-24 px-6 md:px-20 text-center">
-        <h2 className="text-3xl md:text-4xl font-bold mb-14 text-rose-600">How It Works</h2>
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {[
-            { step: "1", title: "Search", desc: "Find destinations, hotels, and itineraries tailored to your trip." },
-            { step: "2", title: "Plan", desc: "Organize your journey and discover cultural & natural highlights." },
-            { step: "3", title: "Travel", desc: "Enjoy your West Bengal trip with a smooth experience." },
-          ].map((s, i) => (
-            <motion.div
-              key={i}
-              whileHover={{ scale: 1.05 }}
-              className="bg-white p-10 rounded-3xl shadow-lg hover:shadow-2xl transition border border-gray-100"
-            >
-              <div className="text-rose-500 text-5xl font-extrabold">{s.step}</div>
-              <h3 className="text-xl md:text-2xl font-semibold mt-4 text-gray-800">{s.title}</h3>
-              <p className="text-gray-600 mt-3 text-sm md:text-base">{s.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer id="contact" className="bg-gradient-to-r from-rose-600 to-pink-700 text-white py-10 text-center">
-        <p className="text-lg font-medium">© {new Date().getFullYear()} WB Tour | DGPRC.pvt</p>
-        <p className="text-sm mt-2 opacity-80">Contact: 9983611110 | wbtour@travel.co.pvt</p>
-      </footer>
+      )}
     </div>
   );
-}
+} 
+

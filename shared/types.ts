@@ -8,6 +8,8 @@ export type PlaceCategory =
   | 'Fort'
   | 'Beach'
   | 'Market'
+  | 'Park'
+  | 'Transport'
   |'Wildlife'
   |'National Park'
   |'Village'

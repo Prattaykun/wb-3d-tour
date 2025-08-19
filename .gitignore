@@ -35,7 +35,9 @@ yarn-error.log*
 
 # vercel
 .vercel
-
+replay_pid10820.log
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+hs_err_pid31892.log
+hs_err_pid10820.log

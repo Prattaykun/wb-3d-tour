@@ -6,7 +6,7 @@ import { PLACES, HOTELS } from '../../shared/west-bengal-data';
 import { PlaceCategory } from '../../shared/types';
 
 const MAP_STYLE =
-  'https://api.maptiler.com/maps/0198af0b-fbe1-7f50-a185-309898d6f3d8/style.json?key=1tMBnuPMA9Xr8NFzcajb';
+ `https://api.maptiler.com/maps/${process.env.NEXT_PUBLIC_MAPTILER_STYLE}/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`;
 const WEST_BENGAL_BOUNDS: [number, number, number, number] = [
   85.75, 20.8, 90.8, 27.5
 ];

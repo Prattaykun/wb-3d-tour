@@ -4,6 +4,7 @@ const config: CapacitorConfig = {
   appId: 'com.wbtour.app',
   appName: ' WBtour',
   webDir: 'out'
+  
 };
 
 export default config;

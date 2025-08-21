@@ -1,0 +1,10 @@
+{
+  "appId": "com.wbtour.app",
+  "appName": "WBtour",
+  "webDir": "dist",
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": false
+    }
+  }
+}

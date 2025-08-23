@@ -608,6 +608,151 @@ export const PLACES: PlaceSpec[] = [
   entryFeeINR: "Free",
   hours: "10:00–18:00",
 },
+  // ===== Hooghly District =====
+  {
+    id: "bandel-church",
+    name: "Basilica of the Holy Rosary (Bandel Church)",
+    category: "Heritage",
+    lat: 22.9191,
+    lon: 88.3953,
+    city: "Bandel",
+    images: ["/media/Hooghly/bandel-church.jpg"],
+    description:
+      "One of the oldest Christian churches in Bengal, founded in 1599 and rebuilt in 1660, featuring Portuguese colonial architecture.",
+    tips: ["Visit early to avoid crowds", "Observe the ship’s mast and ancient keystone"],
+    entryFeeINR: "Free",
+    hours: "10:00–17:00",
+  },
+  {
+    id: "chandannagar-strand",
+    name: "Chandannagar Strand",
+    category: "Heritage",
+    lat: 22.8568,
+    lon: 88.3694,
+    city: "Chandannagar",
+    images: ["/media/Hooghly/chandannagar-strand.jpg"],
+    description:
+      "A nostalgic 2 km-long riverside promenade along the Hooghly River dating back to French colonial times.",
+    tips: ["Walk during sunset for atmospheric views", "Explore nearby French heritage sites"],
+    entryFeeINR: "Free",
+    hours: "All day",
+  },
+  {
+    id: "imambara",
+    name: "Hooghly Imambara",
+    category: "Heritage",
+    lat: 22.8956,
+    lon: 88.3907,
+    city: "Hooghly",
+    images: ["/media/Hooghly/imambara.jpg"],
+    description:
+      "Built in 1861 by Hazi Mohammad Mohsin, this grand mosque and madrasa complex is known for its massive clock tower and intricate architecture.",
+    tips: ["Climb to the top for a panoramic river view", "Check the historic sundial"],
+    entryFeeINR: "₹10",
+    hours: "06:00–18:00",
+  },
+  {
+    id: "rajeshwar-temple",
+    name: "Raj Rajeshwar Temple",
+    category: "Temple",
+    lat: 22.8948,
+    lon: 88.3963,
+    city: "Hooghly",
+    images: ["/media/Hooghly/rajeshwar-temple.jpg"],
+    description:
+      "An ancient Shiva temple in Hooghly, known for its terracotta artwork and cultural significance.",
+    tips: ["Best visited during Shivratri", "Photography allowed outside"],
+    entryFeeINR: "Free",
+    hours: "06:00–20:00",
+  },
+  {
+    id: "serampore-college",
+    name: "Serampore College",
+    category: "Heritage",
+    lat: 22.7510,
+    lon: 88.3422,
+    city: "Serampore",
+    images: ["/media/Hooghly/serampore-college.jpg"],
+    description:
+      "Established in 1818 by missionaries William Carey, Joshua Marshman, and William Ward, one of the oldest colleges in India.",
+    tips: ["Explore colonial architecture", "Nearby Danish Tavern worth visiting"],
+    entryFeeINR: "Free",
+    hours: "All day",
+  },
+
+  // ===== Howrah District =====
+  {
+    id: "howrah-bridge",
+    name: "Howrah Bridge (Rabindra Setu)",
+    category: "Engineering",
+    lat: 22.5900,
+    lon: 88.3100,
+    city: "Howrah",
+    images: ["/media/Howrah/howrah-bridge.jpg"],
+    description:
+      "Iconic steel cantilever bridge over the Hooghly River, connecting Howrah and Kolkata, built in 1943.",
+    tips: ["Visit at dawn or dusk for best lighting", "View it from the riverbank"],
+    entryFeeINR: "Free",
+    hours: "All day",
+  },
+  {
+    id: "indian-botanical-garden",
+    name: "Acharya Jagadish Chandra Bose Indian Botanical Garden",
+    category: "Nature",
+    lat: 22.5650,
+    lon: 88.3450,
+    city: "Shibpur (Howrah)",
+    images: ["/media/Howrah/botanical-garden.jpg"],
+    description:
+      "Sprawling 109-hectare garden housing 12,000-plus plant species and the famous Great Banyan Tree.",
+    tips: ["Ideal for morning walks", "Don’t miss the Great Banyan Tree"],
+    entryFeeINR: "₹50",
+    hours: "09:00–17:00",
+  },
+  {
+    id: "gadiara",
+    name: "Gadiara",
+    category: "Nature",
+    lat: 22.3288,
+    lon: 87.9732,
+    city: "Howrah",
+    images: ["/media/Howrah/gadiara.jpg"],
+    description:
+      "Scenic spot where three rivers converge, known for Fort Mornington ruins and beautiful river cruises.",
+    tips: ["Go for sunset cruise", "Bring picnic supplies"],
+    entryFeeINR: "Free",
+    hours: "All day",
+  },
+  {
+    id: "santragachi-jheel",
+    name: "Santragachi Jheel",
+    category: "Lake",
+    lat: 22.5895,
+    lon: 88.2925,
+    city: "Howrah",
+    images: ["/media/Howrah/santragachi-jheel.jpg"],
+    description:
+      "Large lake attracting thousands of migratory birds, especially Siberian ducks and geese during winter.",
+    tips: ["Best time November–February", "Carry binoculars for birdwatching"],
+    entryFeeINR: "Free",
+    hours: "All day",
+  },
+  {
+    id: "avani-riverside-mall",
+    name: "Avani Riverside Mall",
+    category: "Shopping",
+    lat: 22.5586,
+    lon: 88.3047,
+    city: "Howrah",
+    images: ["/media/Howrah/avani-mall.jpg"],
+    description:
+      "Largest shopping mall in Howrah with retail stores, multiplex, and food court overlooking the Hooghly River.",
+    tips: ["Good for family outing", "Try rooftop restaurants with river view"],
+    entryFeeINR: "Free",
+    hours: "10:30–22:00",
+  }
+
+
 ];
 
 // ===== All Hotels in West Bengal =====
@@ -811,6 +956,95 @@ export const HOTELS: Hotel[] = [
     nearPlaceId: "tiger-hill",
     city: "Darjeeling",
   },
+  
+  // Hotels near Tiger Hill
+  {
+    id: "mount-lungta-boutique",
+    name: "Mount Lungta Boutique Hotel & Spa",
+    lat: 27.0290, // Approx Darjeeling area (close to Tiger Hill)
+    lon: 88.2655,
+    rating: 4.5,
+    priceBand: "Mid",
+    nearPlaceId: "tiger-hill",
+    city: "Darjeeling",
+  },
+  {
+    id: "orion-retreat",
+    name: "Orion Retreat",
+    lat: 27.0280,
+    lon: 88.2660,
+    rating: 4.0,
+    priceBand: "Budget",
+    nearPlaceId: "tiger-hill",
+    city: "Darjeeling",
+  },
+  {
+    id: "udan-himalayan-suites-spa",
+    name: "Udaan Himalayan Suites and Spa",
+    lat: 27.0275,
+    lon: 88.2670,
+    rating: 4.6,
+    priceBand: "Premium",
+    nearPlaceId: "tiger-hill",
+    city: "Darjeeling",
+  },
+
+  // Hotels near Batasia Loop
+  {
+    id: "mayfair-hill-resort",
+    name: "MAYFAIR Hill Resort",
+    lat: 27.0410,
+    lon: 88.2560,
+    rating: 4.7,
+    priceBand: "Premium",
+    nearPlaceId: "batasia-loop",
+    city: "Darjeeling",
+  },
+  {
+    id: "the-elgin-darjeeling",
+    name: "The Elgin, Darjeeling",
+    lat: 27.0390,
+    lon: 88.2590,
+    rating: 4.8,
+    priceBand: "Premium",
+    nearPlaceId: "batasia-loop",
+    city: "Darjeeling",
+  },
+  {
+    id: "ramada-gandhi-road",
+    name: "Ramada by Wyndham Darjeeling (Gandhi Road)",
+    lat: 27.0385,
+    lon: 88.2605,
+    rating: 4.3,
+    priceBand: "Mid",
+    nearPlaceId: "batasia-loop",
+    city: "Darjeeling",
+  },
+  {
+    id: "istana-resort-spa",
+    name: "Istana Resort & Spa",
+    lat: 27.0395,
+    lon: 88.2575,
+    rating: 4.5,
+    priceBand: "Premium",
+    nearPlaceId: "batasia-loop",
+    city: "Darjeeling",
+  },
+
+  // Hotel near Peace Pagoda for illustration
+  {
+    id: "hotel-basera",
+    name: "Hotel Basera",
+    lat: 27.0295,
+    lon: 88.2590,
+    rating: 4.0,
+    priceBand: "Mid",
+    nearPlaceId: "peace-pagoda",
+    city: "Darjeeling",
+  },
+
+
+  
 
   // Digha
   {
@@ -825,16 +1059,7 @@ export const HOTELS: Hotel[] = [
   },
 
   // Shantiniketan
-  {
-    id: "camellia-resort",
-    name: "Camellia Resort Shantiniketan",
-    lat: 23.678,
-    lon: 87.689,
-    rating: 4.3,
-    priceBand: "Mid",
-    nearPlaceId: "visva-bharati",
-    city: "Shantiniketan",
-  },
+
   {
     id: "camellia-resort",
     name: "Camellia Resort Shantiniketan",
@@ -1007,5 +1232,241 @@ export const HOTELS: Hotel[] = [
     nearPlaceId: "cooch-behar-palace",
     city: "Cooch Behar",
   },
+  
+  // Hotels near Angina Bird Sanctuary & Tapan Dighi (Gangarampur area)
+  {
+    id: "hotel-delite-gangarampur",
+    name: "Hotel Delite",
+    lat: 25.3980, // Approximate location in Gangarampur
+    lon: 88.5400,
+    rating: 4.0,
+    priceBand: "Budget",
+    nearPlaceId: "angina-bird-sanctuary",
+    city: "Gangarampur",
+  },
+  {
+    id: "akash-residency-gangarampur",
+    name: "Hotel Akash Residency",
+    lat: 25.3975,
+    lon: 88.5410,
+    rating: 3.8,
+    priceBand: "Budget",
+    nearPlaceId: "tapan-dighi",
+    city: "Gangarampur",
+  },
+  {
+    id: "swastiloke-utsav-bhawan",
+    name: "Swastiloke Utsav Bhawan",
+    lat: 25.3985,
+    lon: 88.5420,
+    rating: 4.4,
+    priceBand: "Mid",
+    nearPlaceId: "kaldighi-park",
+    city: "Gangarampur",
+  },
+
+  // Hotels near Balurghat (district HQ, relevant for access)
+  {
+    id: "hotel-lila-balurghat",
+    name: "The Hotel Lila",
+    lat: 25.2165,
+    lon: 88.8040,
+    rating: 4.0,
+    priceBand: "Budget",
+    nearPlaceId: "balurghat-railway-station",
+    city: "Balurghat",
+  },
+  {
+    id: "kokoro-farmhouse",
+    name: "Balurghat Hotel Kokoro Farmhouse",
+    lat: 25.2170,
+    lon: 88.8050,
+    rating: 4.3,
+    priceBand: "Mid",
+    nearPlaceId: "balurghat-railway-station",
+    city: "Balurghat",
+  },
+  {
+    id: "royal-inn-balurghat",
+    name: "The Royal Inn Hotels and Banquet",
+    lat: 25.2150,
+    lon: 88.8060,
+    rating: 4.2,
+    priceBand: "Mid",
+    nearPlaceId: "balurghat-railway-station",
+    city: "Balurghat",
+  },
+  
+  // Hotels near Bandel Church (Bandel, Hooghly)
+  {
+    "id": "avenue-plaza-hotel",
+    "name": "Avenue Plaza Hotel and Restaurant",
+    "lat": 22.9000,
+    "lon": 88.3900,
+    "rating": 4.2,
+    "priceBand": "Mid",
+    "nearPlaceId": "bandel-church",
+    "city": "Shrirampur"
+  },
+  {
+    "id": "hotel-red-velvet",
+    "name": "Hotel Red Velvet",
+    "lat": 22.9274,
+    "lon": 88.3773,
+    "rating": 4.0,
+    "priceBand": "Budget",
+    "nearPlaceId": "bandel-church",
+    "city": "Bandel"
+  },
+
+  // Hotels near Chandannagar Strand (Chandannagar, Hooghly)
+  {
+    "id": "deteeex-hotel-ivy",
+    "name": "Deteex Hotel Ivy",
+    "lat": 22.8648,
+    "lon": 88.3633,
+    "rating": 3.8,
+    "priceBand": "Budget",
+    "nearPlaceId": "chandannagar-strand",
+    "city": "Chandannagar"
+  },
+  {
+    "id": "swetas-home-stay-new",
+    "name": "Sweta's Home Stay (New)",
+    "lat": 22.8648,
+    "lon": 88.3633,
+    "rating": 4.4,
+    "priceBand": "Budget",
+    "nearPlaceId": "chandannagar-strand",
+    "city": "Chandannagar"
+  },
+  {
+    "id": "stay-inn-hotel-restaurant",
+    "name": "Stay Inn Hotel and Restaurant",
+    "lat": 22.8648,
+    "lon": 88.3633,
+    "rating": 4.0,
+    "priceBand": "Budget",
+    "nearPlaceId": "chandannagar-strand",
+    "city": "Chandannagar"
+  },
+  {
+    "id": "shivam-home-stay",
+    "name": "Shivam Home Stay",
+    "lat": 22.8648,
+    "lon": 88.3633,
+    "rating": 4.0,
+    "priceBand": "Budget",
+    "nearPlaceId": "chandannagar-strand",
+    "city": "Chandannagar"
+  },
+  {
+    "id": "gharana-resort",
+    "name": "Gharana Resort",
+    "lat": 22.8648,
+    "lon": 88.3633,
+    "rating": 4.5,
+    "priceBand": "Mid",
+    "nearPlaceId": "chandannagar-strand",
+    "city": "Chandannagar"
+  },
+
+  // Hotels near Bandel Junction Railway Station (Chinsurah side)
+  {
+    "id": "hotel-plaza-chinsurah",
+    "name": "Hotel Plaza",
+    "lat": 22.9000,
+    "lon": 88.3900,
+    "rating": 3.9,
+    "priceBand": "Budget",
+    "nearPlaceId": "bandel-church",
+    "city": "Chinsurah"
+  },
+  {
+    "id": "kings-crown-hotel",
+    "name": "King's Crown Hotel",
+    "lat": 22.9000,
+    "lon": 88.3900,
+    "rating": 4.8,
+    "priceBand": "Mid",
+    "nearPlaceId": "bandel-church",
+    "city": "Chinsurah"
+  },
+  {
+    "id": "anushka-garden-resort",
+    "name": "Anushka Garden & Resort",
+    "lat": 22.9000,
+    "lon": 88.3900,
+    "rating": 4.1,
+    "priceBand": "Budget",
+    "nearPlaceId": "bandel-church",
+    "city": "Chinsurah"
+  },
+  {
+    "id": "surya-hotel-chinsurah",
+    "name": "Surya Hotel",
+    "lat": 22.9000,
+    "lon": 88.3900,
+    "rating": 4.5,
+    "priceBand": "Budget",
+    "nearPlaceId": "bandel-church",
+    "city": "Chinsurah"
+  },
+
+  // Hotels near Howrah Bridge / Howrah Railway Station
+  {
+    "id": "the-lalit-great-eastern",
+    "name": "The Lalit Great Eastern Kolkata",
+    "lat": 22.5684,
+    "lon": 88.3496,
+    "rating": 4.6,
+    "priceBand": "Premium",
+    "nearPlaceId": "howrah-bridge",
+    "city": "Kolkata"
+  },
+  {
+    "id": "peerless-inn-kolkata",
+    "name": "The Peerless Inn Kolkata",
+    "lat": 22.5684,
+    "lon": 88.3496,
+    "rating": 4.2,
+    "priceBand": "Mid",
+    "nearPlaceId": "howrah-bridge",
+    "city": "Kolkata"
+  },
+  {
+    "id": "hotel-howrah",
+    "name": "Hotel Howrah",
+    "lat": 22.5726,
+    "lon": 88.3639,
+    "rating": 3.8,
+    "priceBand": "Budget",
+    "nearPlaceId": "howrah-railway-station",
+    "city": "Howrah"
+  },
+  {
+    "id": "sapphire-suites",
+    "name": "Sapphire Suites",
+    "lat": 22.5726,
+    "lon": 88.3639,
+    "rating": 4.1,
+    "priceBand": "Mid",
+    "nearPlaceId": "howrah-railway-station",
+    "city": "Kolkata"
+  },
+  {
+    "id": "floatel-kolkata",
+    "name": "Floatel - A Floating Hotel",
+    "lat": 22.5726,
+    "lon": 88.3639,
+    "rating": 4.0,
+    "priceBand": "Premium",
+    "nearPlaceId": "howrah-bridge",
+    "city": "Kolkata"
+  },
+
+
+
+
   
 ];

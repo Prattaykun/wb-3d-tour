@@ -75,7 +75,7 @@ const destinations: Destination[] = [
     id: "5",
     name: "Kalimpong",
     location: "Kalimpong Town",
-    image: "/media/darjeeling/kalingpong.jpeg",
+    image: "/media/darjeeling/Kalingpong.jpeg",
     description:
       "Visit this charming hill station known for its monasteries, flower nurseries, and panoramic valley views.",
     rating: 4.5,

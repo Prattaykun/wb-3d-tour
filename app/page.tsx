@@ -3,8 +3,6 @@
 import { motion } from "framer-motion"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "framer-motion"
-// import Image from "next/image"
 import {
   Search,
   MapPin,
@@ -141,7 +139,7 @@ export default function Home() {
               <a href="#contact" className="py-3 px-4 rounded-xl hover:bg-teal-50/50 hover:text-teal-600" onClick={() => setIsMobileMenuOpen(false)}>Contact</a>
               <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold py-4 rounded-xl" onClick={() => router.push("/tourselect")}>Book Now <ArrowRight className="w-4 h-4 ml-2" /></Button>
             </div>
-          </div>
+          </motion.div>
         )}
       </nav>
 
@@ -200,7 +198,7 @@ export default function Home() {
                   </motion.div>
                 ))}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </section>
@@ -283,14 +281,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-
-      {/* Simple keyframe for mobile menu */}
-      <style jsx global>{`
-        @keyframes fadeIn {
-          from { opacity: 0; transform: translateY(-6px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   )
 }

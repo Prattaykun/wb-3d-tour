@@ -123,14 +123,12 @@ const destinations: Destination[] = [
   },
 ]
 
-export default function TourPlanPage() {
+export function TourPlanPage() {
   const [selectedDestinations, setSelectedDestinations] = useState<string[]>([])
 
   const toggleDestination = (destinationId: string) => {
     setSelectedDestinations((prev) =>
-      prev.includes(destinationId)
-        ? prev.filter((id) => id !== destinationId)
-        : [...prev, destinationId],
+      prev.includes(destinationId) ? prev.filter((id) => id !== destinationId) : [...prev, destinationId],
     )
   }
 

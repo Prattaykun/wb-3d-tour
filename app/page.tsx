@@ -174,8 +174,15 @@ export default function Home() {
   ]
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50/30 to-teal-50/50 relative overflow-x-hidden">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.1),transparent_50%)] pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-cyan-200 via-slate-100 to-teal-200 relative overflow-x-hidden">
+  {/* Radial glow layers */}
+  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(6,182,212,0.25),transparent_65%)] pointer-events-none" />
+  <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_right,rgba(14,165,233,0.22),transparent_70%)] pointer-events-none" />
+
+  {/* Floating blurred orbs */}
+  <div className="absolute top-24 left-14 w-80 h-80 bg-cyan-400/30 rounded-full blur-3xl animate-pulse" />
+  <div className="absolute bottom-36 right-20 w-[28rem] h-[28rem] bg-teal-500/25 rounded-full blur-3xl animate-ping" />
+<div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(6,182,212,0.1),transparent_50%)] pointer-events-none" />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(14,165,233,0.08),transparent_50%)] pointer-events-none" />
 
       {/* Floating decorative elements */}
@@ -236,7 +243,8 @@ export default function Home() {
             <Phone className="w-4 h-4 group-hover:text-teal-500 transition-colors" />
             Contact
           </a>
-          <Button className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 hover:from-teal-600 hover:via-cyan-600 hover:to-teal-700 text-white rounded-2xl px-8 py-3 shadow-lg shadow-teal-500/25 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-teal-500/30 font-semibold">
+          <Button className="bg-gradient-to-r from-teal-500 via-cyan-500 to-teal-600 hover:from-teal-600 hover:via-cyan-600 hover:to-teal-700 text-white rounded-2xl px-8 py-3 shadow-lg shadow-teal-500/25 transition-all duration-300 hover:scale-105 hover:shadow-xl hover:shadow-teal-500/30 font-semibold"
+          onClick={() => router.push("/tourselect")}>
             Book Now
             <ArrowRight className="w-4 h-4 ml-2" />
           </Button>
@@ -283,7 +291,8 @@ export default function Home() {
                 <Phone className="w-5 h-5" />
                 Contact
               </a>
-              <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl py-4 shadow-lg mt-4 font-semibold">
+              <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl py-4 shadow-lg mt-4 font-semibold"
+              onClick={() => router.push("/tourselect")}>
                 Book Now
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
@@ -441,7 +450,7 @@ export default function Home() {
                       <Button
                         variant="outline"
                         className="w-full rounded-2xl border-2 border-teal-200 hover:bg-teal-50 hover:border-teal-300 transition-all duration-300 text-teal-700 font-semibold py-3 group-hover:bg-teal-500 group-hover:text-white group-hover:border-teal-500 bg-transparent"
-                      >
+                      onClick={() => router.push("/tourselect")}>
                         Explore
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>

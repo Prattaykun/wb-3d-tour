@@ -36,6 +36,7 @@ export interface PlaceSpec {
   tips?: string[];
   entryFeeINR?: number | 'Free'|string;
   hours?: string;
+  // isImportant: boolean;
 }
 
 export interface Hotel {

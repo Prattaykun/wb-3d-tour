@@ -1,5 +1,5 @@
 'use client';
-import maplibregl, { Map, Marker, Popup } from 'maplibre-gl';
+import maplibregl, { Map, Marker, Popup, LngLatBounds } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
 import { PLACES, HOTELS } from '../../shared/west-bengal-data';
@@ -31,7 +31,7 @@ const ICON_MAP: Record<PlaceCategory, string> = {
   Pilgrimage: '<img src="/media/icons/pilgrimage.png" width="30" height="30" alt="Pilgrimage" />',
   Archaeological: '<img src="/media/icons/a.png" width="30" height="30" alt="Archaeological" />',
   Hillstation: '<img src="/media/icons/mountain.png" width="50" height="50" alt="Mountains" />',
-  Engineering: '<img src="/media/icons/engineering.png" width="30" height="30" alt="Engineering" />',
+  Engineering: '<img src="/media/icons/engineering.png" width="37" height="37" alt="Engineering" />',
   Religious: '<img src="/media/icons/religious.png" width="30" height="30" alt="Religious" />',
   Lake: '<img src="/media/icons/lake.png" width="30" height="30" alt="Lake" />',
   Shopping: '<img src="/media/icons/shopping.png" width="30" height="30" alt="Shopping" />',
@@ -45,8 +45,10 @@ export default function WBMap() {
   const [tourMode, setTourMode] = useState(true);
   const [tourPaused, setTourPaused] = useState(false);
 
-  // ✅ keep track of hotel markers
+  // ✅ keep track of hotel markers + map markers
   const hotelMarkersRef = useRef<Marker[]>([]);
+  const markersRef = useRef<Record<string, Marker>>({});
+  const lastActiveMarkerRef = useRef<Marker | null>(null);
 
   const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const toRad = (x: number) => (x * Math.PI) / 180;
@@ -95,13 +97,94 @@ export default function WBMap() {
     PLACES.forEach((p) => {
       const icon = document.createElement('div');
       icon.innerHTML = ICON_MAP[p.category] ?? ICON_MAP['Heritage'];
-      icon.className = 'cursor-pointer';
+      icon.className = 'cursor-pointer transition-transform duration-200'; // smooth scale
 
       const marker = new Marker({ element: icon }).setLngLat([p.lon, p.lat]).addTo(map);
+      markersRef.current[p.id] = marker;
 
       marker.getElement().addEventListener('click', () => {
+  // reset previous marker
+  if (lastActiveMarkerRef.current) {
+    lastActiveMarkerRef.current.getElement().style.transform = 'translateY(0) scale(1)';
+    lastActiveMarkerRef.current = null;
+  }
+
+  // close any open popups
+  if (mapRef.current) {
+    const popups = document.querySelectorAll(".maplibregl-popup");
+    popups.forEach(p => p.remove());
+  }
+
+  // 🔑 reset old activeId before assigning new one
+  setActiveId(null);
+  setTimeout(() => setActiveId(p.id), 0);
+
+  // uplift + enlarge clicked marker
+  marker.getElement().style.transform = 'translateY(-10px) scale(1.3)';
+  lastActiveMarkerRef.current = marker;
+
         setActiveId(p.id);
-        map.flyTo({ center: [p.lon, p.lat], zoom: 12, pitch: 60, bearing: -10, essential: true });
+        // const popupRef = useRef<Popup | null>(null);
+
+        // custom popup content
+const popupContent = document.createElement('div');
+popupContent.className = "bg-black/70 text-white rounded-lg p-2 w-[200px] flex flex-col items-center space-y-2";
+
+// image
+if (p.images && p.images.length > 0) {
+  const img = document.createElement('img');
+  
+  // ✅ normalize relative vs absolute
+  const firstImage = p.images[0].startsWith('http')
+    ? p.images[0]
+    : `${window.location.origin}${p.images[0]}`;
+  
+  img.src = firstImage;
+  img.alt = `${p.name} image`;
+  img.className = "rounded-md w-full h-[100px] object-cover";
+  popupContent.appendChild(img);
+}
+
+
+// buttons row
+const btnRow = document.createElement('div');
+btnRow.className = "flex justify-between w-full mt-2 space-x-2";
+
+const addBtn = document.createElement('button');
+addBtn.textContent = "Add to tour plan";
+addBtn.className = "flex-1 bg-white/20 hover:bg-white/40 text-xs py-1 px-2 rounded transition";
+btnRow.appendChild(addBtn);
+
+const marketBtn = document.createElement('button');
+marketBtn.textContent = "Checkout local markets";
+marketBtn.className = "flex-1 bg-white/20 hover:bg-white/40 text-xs py-1 px-2 rounded transition";
+btnRow.appendChild(marketBtn);
+
+popupContent.appendChild(btnRow);
+
+const popup = new Popup({
+  offset: 25,
+  closeOnClick: false,
+  className: "custom-popup"
+})
+  .setLngLat([p.lon, p.lat])
+  .setDOMContent(popupContent)
+  .addTo(map);
+
+// store reference to close it later
+marker.getElement().setAttribute("data-popup-id", p.id);
+
+        // ✅ fit bounds to include place + nearby hotels
+        const hotelsInRange = HOTELS.filter((h) =>
+          haversine(p.lat, p.lon, h.lat, h.lon) <= distanceSetting
+        );
+
+        const bounds = new LngLatBounds([p.lon, p.lat], [p.lon, p.lat]);
+        hotelsInRange.forEach((h) => bounds.extend([h.lon, h.lat]));
+
+        map.fitBounds(bounds, { padding: 100, maxZoom: 14, duration: 1200 });
+
+        // popup
         new Popup({ offset: 12 })
           .setLngLat([p.lon, p.lat])
           .setHTML(`<div style="font-weight:600">${p.name}</div><div style="font-size:12px">${p.city ?? ''}</div>`)
@@ -113,13 +196,12 @@ export default function WBMap() {
       map.remove();
       mapRef.current = null;
     };
-  }, []);
+  }, [distanceSetting]);
 
   // ✅ Add/remove hotel markers when active place changes
   useEffect(() => {
     if (!mapRef.current) return;
 
-    // clear old markers
     hotelMarkersRef.current.forEach((m) => m.remove());
     hotelMarkersRef.current = [];
 
@@ -134,7 +216,14 @@ export default function WBMap() {
       const el = document.createElement('div');
       el.innerHTML = `<img src="/media/icons/hotel.png" width="20" height="20" alt="Hotel" />`;
       const m = new Marker({ element: el }).setLngLat([h.lon, h.lat]).addTo(mapRef.current!);
+
+// open Google Maps on click
+      el.addEventListener("click", () => {
+      window.open(`https://www.google.com/maps/search/?api=1&query=${h.lat},${h.lon}`, "_blank");
+        });
+
       hotelMarkersRef.current.push(m);
+
     });
   }, [activeId, distanceSetting]);
 
@@ -212,12 +301,27 @@ export default function WBMap() {
             bg-black shadow-lg p-4 overflow-y-auto z-20
             max-[500px]:bottom-0 max-[500px]:top-auto max-[500px]:h-[44vh]"
         >
-          <button
-            className="text-xs text-red-500 absolute right-4 top-4"
-            onClick={() => setActiveId(null)}
-          >
-            ✕ Close
-          </button>
+        <button
+  className="text-xs text-red-500 absolute right-4 top-4"
+  onClick={() => {
+    setActiveId(null);
+
+    // reset active marker style
+    if (lastActiveMarkerRef.current) {
+      lastActiveMarkerRef.current.getElement().style.transform = 'translateY(0) scale(1)';
+      lastActiveMarkerRef.current = null;
+    }
+
+    // ✅ remove any open popups
+    if (mapRef.current) {
+      const popups = document.querySelectorAll(".maplibregl-popup");
+      popups.forEach((p) => p.remove());
+    }
+  }}
+>
+  ✕ Close
+</button>
+
           <h3 className="text-xl font-semibold mt-4 text-gray-400">{activePlace.name}</h3>
           <p className="text-xs text-gray-400 mb-2">
             {activePlace.city} • {activePlace.category}
@@ -227,7 +331,7 @@ export default function WBMap() {
                {activePlace.images.map((imgSrc: string, idx: number) => (
                 <img
                   key={idx}
-                  src={imgSrc.startsWith('http') ? imgSrc : imgSrc}   // already clean path now
+                  src={imgSrc.startsWith('http') ? imgSrc : imgSrc}
                   alt={`${activePlace.name} image ${idx + 1}`}
                   className="rounded-lg w-full h-auto max-h-[200px] object-cover"
                 />
@@ -274,5 +378,4 @@ export default function WBMap() {
       )}
     </div>
   );
-} 
-
+}

@@ -17,6 +17,7 @@ export const PLACES: PlaceSpec[] = [
     tips: ["Arrive 2 hours before departure", "Metro and taxi available for city transit"],
     entryFeeINR: "Depends on airline",
     hours: "24 hours",
+    // isImportant: true,
   },
   
   {
@@ -740,7 +741,7 @@ export const PLACES: PlaceSpec[] = [
   {
     id: "avani-riverside-mall",
     name: "Avani Riverside Mall",
-    category: "Shopping",
+    category: "Market",
     lat: 22.5586,
     lon: 88.3047,
     city: "Howrah",

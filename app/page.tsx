@@ -5,9 +5,9 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
   Search,
-  MapPin,
-  Compass,
-  Stars,
+  // MapPin,
+  // Compass,
+  // Stars,
   Mountain,
   Waves,
   TreePine,

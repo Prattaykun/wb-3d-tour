@@ -2,5 +2,7 @@
 	"appId": "com.wbtour.app",
 	"appName": " WBtour",
 	"webDir": "out",
-	"packageClassList": []
+	"packageClassList": [
+		"AppPlugin"
+	]
 }

@@ -30,7 +30,11 @@ const ICON_MAP: Record<PlaceCategory, string> = {
   'Cultural Site': '<img src="/media/icons/cultural-site.png" width="30" height="30" alt="Cultural Site" />',
   Pilgrimage: '<img src="/media/icons/pilgrimage.png" width="30" height="30" alt="Pilgrimage" />',
   Archaeological: '<img src="/media/icons/a.png" width="30" height="30" alt="Archaeological" />',
-  Hillstation: '<img src="/media/icons/mountain.png" width="30" height="30" alt="Mountains" />',
+  Hillstation: '<img src="/media/icons/mountain.png" width="50" height="50" alt="Mountains" />',
+  Engineering: '<img src="/media/icons/engineering.png" width="30" height="30" alt="Engineering" />',
+  Religious: '<img src="/media/icons/religious.png" width="30" height="30" alt="Religious" />',
+  Lake: '<img src="/media/icons/lake.png" width="30" height="30" alt="Lake" />',
+  Shopping: '<img src="/media/icons/shopping.png" width="30" height="30" alt="Shopping" />',
 };
 
 export default function WBMap() {
@@ -128,7 +132,7 @@ export default function WBMap() {
 
     hotelsWithinRadius.forEach((h) => {
       const el = document.createElement('div');
-      el.innerHTML = `<img src="/media/icons/hotel.png" width="30" height="30" alt="Hotel" />`;
+      el.innerHTML = `<img src="/media/icons/hotel.png" width="20" height="20" alt="Hotel" />`;
       const m = new Marker({ element: el }).setLngLat([h.lon, h.lat]).addTo(mapRef.current!);
       hotelMarkersRef.current.push(m);
     });

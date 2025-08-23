@@ -450,7 +450,7 @@ export default function Home() {
                       <Button
                         variant="outline"
                         className="w-full rounded-2xl border-2 border-teal-200 hover:bg-teal-50 hover:border-teal-300 transition-all duration-300 text-teal-700 font-semibold py-3 group-hover:bg-teal-500 group-hover:text-white group-hover:border-teal-500 bg-transparent"
-                      >
+                      onClick={() => router.push("/tourselect")}>
                         Explore
                         <ArrowRight className="w-4 h-4 ml-2" />
                       </Button>

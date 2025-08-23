@@ -308,6 +308,125 @@ export const PLACES: PlaceSpec[] = [
     entryFeeINR: 20,
     hours: "Sunrise–Sunset",
   },
+  {
+  id: "chowrasta-mall",
+  name: "Chowrasta (The Mall)",
+  category: "Cultural Site",
+  lat: 27.036007,
+  lon: 88.262675,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/chowrasta-1.jpg"],
+  description:
+    "Historic Victorian-era public square at the heart of Darjeeling, popular for leisurely strolls and local culture.",
+  tips: ["Try pony rides", "Visit cafes & bookshops nearby"],
+  entryFeeINR: "Free",
+  hours: "Open all day",
+},
+
+{
+  id: "observatory-hill-mahakal-temple",
+  name: "Observatory Hill & Mahakal Temple",
+  category: "Cultural Site",
+  lat: 27.047718,
+  lon: 88.268070,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/observatory-hill-1.jpg"],
+  description:
+    "Sacred hill with temple blending Hindu & Buddhist traditions; offers panoramic views above Chowrasta.",
+  tips: ["Visit in evening for serenity", "Combine with a Mall Road walk"],
+  entryFeeINR: "Free",
+  hours: "6:00–20:00",
+},
+
+{
+  id: "himalayan-mountaineering-institute",
+  name: "Himalayan Mountaineering Institute (HMI)",
+  category: "Pilgrimage",
+  lat: 27.05873,
+  lon: 88.25326,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/hmi-1.jpg"],
+  description:
+    "Premier mountaineering school and museum founded in 1954; training institute for climbers globally.",
+  tips: ["Visit museum", "Check workshop timings; closed Thursdays"],
+  entryFeeINR: 60,
+  hours: "9:30–16:30 (Mon–Sat)",
+},
+
+{
+  id: "darjeeling-zoological-park",
+  name: "Padmaja Naidu Himalayan Zoological Park",
+  category: "Wildlife",
+  lat: 27.05861,
+  lon: 88.25441,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/zoo-1.jpg"],
+  description:
+    "World’s highest-altitude zoo, conserving Himalayan fauna like snow leopards, red pandas, and Siberian tigers.",
+  tips: ["Go early for active animals", "Closed Thursdays"],
+  entryFeeINR: 60,
+  hours: "8:30–16:00 (closed Thu)",
+},
+
+{
+  id: "peace-pagoda",
+  name: "Peace Pagoda (Japanese Temple)",
+  category: "Temple",
+  lat: 27.027587,
+  lon: 88.258987,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/peace-pagoda-1.jpg"],
+  description:
+    "Serene white stupa dedicated to peace, located on Jalapahar hills near Nipponzan Myohoji Temple.",
+  tips: ["Quiet spiritual spot", "Short drive from town center"],
+  entryFeeINR: "Free",
+  hours: "8:00–18:00",
+},
+
+{
+  id: "batasia-loop",
+  name: "Batasia Loop & Gorkha War Memorial",
+  category: "Heritage",
+  lat: 27.0418,
+  lon: 88.2566,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/batasia-loop-1.jpg"],
+  description:
+    "Spiral rail loop of the Toy Train with landscaped gardens and war memorial, offering Himalayan vistas.",
+  tips: ["Best lighting mid-morning", "Combine with toy train ride"],
+  entryFeeINR: 30,
+  hours: "6:00–18:00",
+},
+
+{
+  id: "darjeeling-himalayan-railway",
+  name: "Darjeeling Himalayan Railway (Toy Train)",
+  category: "Heritage",
+  lat: 27.0420,
+  lon: 88.2636,
+  city: "Darjeeling",
+  images: ["/media/Darjeeling/toy-train-1.jpg"],
+  description:
+    "UNESCO World Heritage narrow-gauge railway (Toy Train) between NJP and Darjeeling, with zig-zags and loops.",
+  tips: ["Book early—steam specials popular", "Board from NJP or Ghum"],
+  entryFeeINR: "Varies",
+  hours: "6:00–18:00",
+},
+
+{
+  id: "bagdogra-airport",
+  name: "Bagdogra Airport",
+  category: "Transport",
+  lat: 26.6812,
+  lon: 88.3286,
+  city: "Siliguri",
+  images: ["/media/Transport/bagdogra-airport-1.jpg"],
+  description:
+    "Main airport serving Darjeeling and North Bengal, with good connectivity and transit options.",
+  tips: ["Allow buffer time for uphill drive", "Prepaid taxis available outside"],
+  entryFeeINR: "None",
+  hours: "24 hours",
+},
 
   // ===== Digha =====
   {
@@ -446,6 +565,49 @@ export const PLACES: PlaceSpec[] = [
     entryFeeINR: "20",
     hours: "Sunrise – Sunset",
   },
+  // ===== Dakshin Dinajpur =====
+{
+  id: "angina-bird-sanctuary",
+  name: "Angina Bird Sanctuary",
+  category: "Wildlife",
+  lat: 25.30863,  // Approximate location near Tapan block and Kumarganj
+  lon: 88.56644,  // :contentReference[oaicite:0]{index=0}
+  city: "Kumarganj",
+  images: ["/media/DakshinDinajpur/angina-1.jpg"],
+  description:
+    "Wetland habitat where over 100 species of migratory birds arrive in winter; excellent for bird watching and ecological tourism.",
+  tips: ["Visit winter months for birdwatching", "Combine visit with Sarongbari picnic spot"],
+  entryFeeINR: "Free",
+  hours: "6:00–18:00",
+},
+{
+  id: "tapan-dighi",
+  name: "Tapan Dighi",
+  category: "Nature",
+  lat: 25.30056,  // 25°18'2\" N
+  lon: 88.56944,  // 88°34'10\" E :contentReference[oaicite:1]{index=1}
+  city: "Tapan",
+  images: ["/media/DakshinDinajpur/tapan-dighi-1.jpg"],
+  description:
+    "Historic man-made lake and picnic spot in Tapan block; believed to be created by King Laxman Sen.",
+  tips: ["Carry snacks and water", "Visit both Tapan Dighi and nearby archaeological mound"],
+  entryFeeINR: "Free",
+  hours: "6:00–18:00",
+},
+{
+  id: "kaldighi-park",
+  name: "Kaldighi Park",
+  category: "Nature",
+  lat: 25.396893,
+  lon: 88.543333,
+  city: "Gangarampur",
+  images: ["/media/DakshinDinajpur/kaldighi-park-1.jpg"],
+  description:
+    "Public park surrounding a large lake; attracts migratory birds in winter and is ideal for family visits.",
+  tips: ["Winter best for birdwatching", "Combine with visit to Dhal Dighi nearby"],
+  entryFeeINR: "Free",
+  hours: "10:00–18:00",
+},
 ];
 
 // ===== All Hotels in West Bengal =====

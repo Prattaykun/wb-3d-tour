@@ -283,7 +283,8 @@ export default function Home() {
                 <Phone className="w-5 h-5" />
                 Contact
               </a>
-              <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl py-4 shadow-lg mt-4 font-semibold">
+              <Button className="bg-gradient-to-r from-teal-500 to-cyan-600 text-white rounded-2xl py-4 shadow-lg mt-4 font-semibold"
+              onClick={() => router.push("/tourselect")}>
                 Book Now
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>

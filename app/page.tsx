@@ -24,6 +24,7 @@ import {
   Share2,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import BottomNav from "@/components/BottomNav"
 
 export default function Home() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -93,8 +94,8 @@ export default function Home() {
   ]
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-br from-[#e0f7fa] via-[#ffffff] to-[#b2ebf2] overflow-x-hidden">
-      
+    <><div className="relative min-h-screen bg-gradient-to-br from-[#e0f7fa] via-[#ffffff] to-[#b2ebf2] overflow-x-hidden">
+
       {/* Decorative Glows */}
       <div className="absolute inset-0 bg-radial-premium1 pointer-events-none" />
       <div className="absolute inset-0 bg-radial-premium2 pointer-events-none" />
@@ -157,7 +158,7 @@ export default function Home() {
             <Search className="w-6 h-6 text-teal-600" />
             <input type="text" placeholder="Search destinations, hotels, or itineraries..." className="flex-1 outline-none border-none bg-transparent text-gray-700 text-lg placeholder-gray-400" />
           </div>
-          <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold py-4 px-8 rounded-xl hover:scale-105 transition" onClick={() => router.push("/frontpage")}>
+          <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold py-4 px-8 rounded-xl hover:scale-105 transition" onClick={() => router.push("/map")}>
             Search <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </motion.div>
@@ -184,16 +185,16 @@ export default function Home() {
                         <button className="w-8 h-8 bg-white/90 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"><Share2 className="w-4 h-4 text-gray-700" /></button>
                       </div>
                     </div>
-                   <div className="p-6">
-  <h4 className="text-xl font-bold text-gray-800 mb-2">{d.name}</h4>
-  <p className="text-gray-600 mb-4">{d.description}</p>
-  <Button
-    className="w-full rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-900 hover:to-black shadow-lg transition-all"
-    onClick={() => router.push("/tourselect")}
-  >
-    Explore <ArrowRight className="w-4 h-4 ml-2" />
-  </Button>
-</div>
+                    <div className="p-6">
+                      <h4 className="text-xl font-bold text-gray-800 mb-2">{d.name}</h4>
+                      <p className="text-gray-600 mb-4">{d.description}</p>
+                      <Button
+                        className="w-full rounded-xl bg-gradient-to-r from-gray-800 to-gray-900 text-white hover:from-gray-900 hover:to-black shadow-lg transition-all"
+                        onClick={() => router.push("/tourselect")}
+                      >
+                        Explore <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
 
                   </motion.div>
                 ))}
@@ -207,39 +208,39 @@ export default function Home() {
       <section id="how-it-works" className="py-24 px-6 text-center bg-gradient-to-br from-teal-50/50 to-cyan-50/30">
         <motion.h2 className="text-4xl font-extrabold mb-16 bg-gradient-to-r from-gray-800 to-teal-700 bg-clip-text text-transparent">How It Works</motion.h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-  {[
-    {
-      step: "1",
-      title: "Search",
-      desc: "Find destinations, hotels, and itineraries tailored to your preferences and budget.",
-      color: "from-blue-700 to-cyan-700",
-    },
-    {
-      step: "2",
-      title: "Plan",
-      desc: "Organize your journey and discover cultural, natural, and adventure highlights.",
-      color: "from-teal-700 to-green-700",
-    },
-    {
-      step: "3",
-      title: "Travel",
-      desc: "Enjoy your West Bengal trip with seamless bookings and local support.",
-      color: "from-purple-700 to-pink-700",
-    },
-  ].map((s, i) => (
-    <motion.div
-      key={i}
-      whileHover={{ scale: 1.05, y: -10 }}
-      className="bg-gray-900/80 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-gray-700 text-white"
-    >
-      <div className={`text-6xl font-black mb-4 bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>
-        {s.step}
-      </div>
-      <h3 className="text-2xl font-bold mb-2">{s.title}</h3>
-      <p className="text-gray-200">{s.desc}</p>
-    </motion.div>
-  ))}
-</div>
+          {[
+            {
+              step: "1",
+              title: "Search",
+              desc: "Find destinations, hotels, and itineraries tailored to your preferences and budget.",
+              color: "from-blue-700 to-cyan-700",
+            },
+            {
+              step: "2",
+              title: "Plan",
+              desc: "Organize your journey and discover cultural, natural, and adventure highlights.",
+              color: "from-teal-700 to-green-700",
+            },
+            {
+              step: "3",
+              title: "Travel",
+              desc: "Enjoy your West Bengal trip with seamless bookings and local support.",
+              color: "from-purple-700 to-pink-700",
+            },
+          ].map((s, i) => (
+            <motion.div
+              key={i}
+              whileHover={{ scale: 1.05, y: -10 }}
+              className="bg-gray-900/80 backdrop-blur-md shadow-2xl rounded-3xl p-8 border border-gray-700 text-white"
+            >
+              <div className={`text-6xl font-black mb-4 bg-gradient-to-r ${s.color} bg-clip-text text-transparent`}>
+                {s.step}
+              </div>
+              <h3 className="text-2xl font-bold mb-2">{s.title}</h3>
+              <p className="text-gray-200">{s.desc}</p>
+            </motion.div>
+          ))}
+        </div>
 
       </section>
 
@@ -281,6 +282,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
+    </div><BottomNav /></>
   )
 }

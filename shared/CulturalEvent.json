@@ -1,0 +1,47 @@
+[
+  {
+    "name": "Durga Puja",
+    "description": "The biggest festival in Bengal, celebrated with elaborate pandals and rituals.",
+    "category": "festival",
+    "event_type": "durga_puja",
+    "start_date": "2025-10-01",
+    "end_date": "2025-10-05",
+    "location": "Kolkata",
+    "venue": "Various pandals",
+    "image_url": "/media/events/durga_puja.jpg",
+    "cultural_significance": "Symbolizes victory of good over evil.",
+    "activities": ["Pandal hopping", "Cultural performances", "Food stalls"],
+    "featured": true,
+    "is_recurring": true
+  },
+  {
+    "name": "Poush Mela",
+    "description": "Annual fair in Shantiniketan celebrating Bengali culture, crafts, and music.",
+    "category": "fair",
+    "event_type": "poush_mela",
+    "start_date": "2025-12-23",
+    "end_date": "2025-12-25",
+    "location": "Shantiniketan",
+    "venue": "Poush Mela Ground",
+    "image_url": "/media/events/poush_mela.jpg",
+    "cultural_significance": "Promotes rural crafts and folk music.",
+    "activities": ["Folk music", "Handicraft stalls", "Food stalls"],
+    "featured": true,
+    "is_recurring": true
+  },
+  {
+    "name": "Kolkata Book Fair",
+    "description": "Largest book fair in Asia, attracting publishers and readers from all over the world.",
+    "category": "exhibition",
+    "event_type": "book_fair",
+    "start_date": "2025-01-28",
+    "end_date": "2025-02-09",
+    "location": "Kolkata",
+    "venue": "Milan Mela Ground",
+    "image_url": "/media/events/book_fair.jpg",
+    "cultural_significance": "Encourages reading and literary culture.",
+    "activities": ["Book launches", "Author talks", "Workshops"],
+    "featured": false,
+    "is_recurring": true
+  }
+]

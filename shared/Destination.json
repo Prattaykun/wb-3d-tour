@@ -1,0 +1,35 @@
+[
+  {
+    "id": "1",
+    "name": "Darjeeling",
+    "category": "hills",
+    "price_range": "mid-range",
+    "difficulty": "easy",
+    "image_url": "/images/darjeeling.jpg",
+    "gallery_images": [
+      "/images/darjeeling-1.jpg",
+      "/images/darjeeling-2.jpg",
+      "/images/darjeeling-3.jpg"
+    ],
+    "activities": ["Toy Train Ride", "Tea Garden Visit", "Hiking"],
+    "description": "Darjeeling, the 'Queen of Hills', is famous for tea gardens, Kanchenjunga views, and colonial charm.",
+    "best_time": "March to May, September to November",
+    "duration": "3-5 days",
+    "location": "Darjeeling",
+    "featured": true
+  },
+  {
+    "id": "2",
+    "name": "Sundarbans",
+    "category": "wildlife",
+    "price_range": "budget",
+    "image_url": "/images/sundarbans.jpg",
+    "gallery_images": ["/images/sundarbans-1.jpg", "/images/sundarbans-2.jpg"],
+    "activities": ["Boat Safari", "Tiger Spotting", "Bird Watching"],
+    "description": "The Sundarbans is the world's largest mangrove forest, home to the Royal Bengal Tiger and rich biodiversity.",
+    "best_time": "November to February",
+    "duration": "2-4 days",
+    "location": "South 24 Parganas",
+    "featured": false
+  }
+]

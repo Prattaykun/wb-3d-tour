@@ -63,6 +63,24 @@ export default function WBMap() {
   };
 
   useEffect(() => {
+    // ✅ Override Maplibre default popup box/arrow
+if (typeof document !== "undefined") {
+  const style = document.createElement("style");
+  style.innerHTML = `
+    .maplibregl-popup-content {
+      background: transparent !important;
+      box-shadow: none !important;
+      padding: 0 !important;
+      border-radius: 0 !important;
+      overflow: visible !important;
+    }
+    .maplibregl-popup-tip {
+      display: none !important;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
     if (!containerRef.current || mapRef.current) return;
 
     const map = new maplibregl.Map({
@@ -128,7 +146,8 @@ export default function WBMap() {
 
         // custom popup content
 const popupContent = document.createElement('div');
-popupContent.className = "bg-black/70 text-white rounded-lg p-2 w-[200px] flex flex-col items-center space-y-2";
+popupContent.className =
+  "bg-black/80 text-white rounded-xl w-[240px] flex flex-col items-center overflow-hidden shadow-lg";
 
 // image
 if (p.images && p.images.length > 0) {
@@ -141,7 +160,8 @@ if (p.images && p.images.length > 0) {
   
   img.src = firstImage;
   img.alt = `${p.name} image`;
-  img.className = "rounded-md w-full h-[100px] object-cover";
+img.className =
+  "w-full h-[140px] object-cover";
   popupContent.appendChild(img);
 }
 

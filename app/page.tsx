@@ -158,7 +158,7 @@ export default function Home() {
             <Search className="w-6 h-6 text-teal-600" />
             <input type="text" placeholder="Search destinations, hotels, or itineraries..." className="flex-1 outline-none border-none bg-transparent text-gray-700 text-lg placeholder-gray-400" />
           </div>
-          <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold py-4 px-8 rounded-xl hover:scale-105 transition" onClick={() => router.push("/map")}>
+          <Button className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white font-semibold py-4 px-8 rounded-xl hover:scale-105 transition" onClick={() => router.push("/admin")}>
             Search <ArrowRight className="w-5 h-5 ml-2" />
           </Button>
         </motion.div>

@@ -16,6 +16,7 @@
     "@ionic/react": "^8.7.3",
     "@radix-ui/react-slot": "^1.2.3",
     "@supabase/ssr": "^0.7.0",
+    "@supabase/supabase-js": "^2.56.0",
     "@types/react-router-dom": "^5.3.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -42,7 +43,7 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "15.4.6",
-    "supabase": "^2.34.3",
+    "supabase": "^2.39.2",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^6.3.5"

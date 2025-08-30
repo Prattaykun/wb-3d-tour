@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-
+import Search from "@/components/Search";
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseAnonKey);
@@ -122,7 +122,7 @@ export default function Page() {
         <p className="text-gray-600 text-center mb-8">
           Keep track of all the cities you have visited with photos.
         </p>
-
+        <Search />
         {/* City form */}
         <form onSubmit={addCity} className="flex flex-col gap-4 mb-8">
           <input

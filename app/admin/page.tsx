@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase } from "../../utils/supabase/server"
 import * as Tabs from "@radix-ui/react-tabs";
 import { uploadToCloudinary } from "../../utils/cloudinary/client";
+import { supabase } from "../../utils/supabase/server";
 
 export default function AdminPage() {
   return (
@@ -14,19 +14,18 @@ export default function AdminPage() {
         <Tabs.List className="flex space-x-4 border-b">
           <Tabs.Trigger value="places" className="px-4 py-2">Places</Tabs.Trigger>
           <Tabs.Trigger value="hotels" className="px-4 py-2">Hotels</Tabs.Trigger>
+          <Tabs.Trigger value="events" className="px-4 py-2">Events</Tabs.Trigger>
         </Tabs.List>
 
-        <Tabs.Content value="places">
-          <PlacesAdmin />
-        </Tabs.Content>
-        <Tabs.Content value="hotels">
-          <HotelsAdmin />
-        </Tabs.Content>
+        <Tabs.Content value="places"><PlacesAdmin /></Tabs.Content>
+        <Tabs.Content value="hotels"><HotelsAdmin /></Tabs.Content>
+        <Tabs.Content value="events"><EventsAdmin /></Tabs.Content>
       </Tabs.Root>
     </div>
   );
 }
 
+/* ---------- Places ---------- */
 function PlacesAdmin() {
   const [places, setPlaces] = useState<any[]>([]);
   const [newPlace, setNewPlace] = useState({
@@ -38,42 +37,40 @@ function PlacesAdmin() {
     google_map_link: "",
     description: "",
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => { fetchPlaces(); }, []);
 
   async function fetchPlaces() {
-    const { data, error } = await supabase.from("places").select("*");
-    if (!error) setPlaces(data);
+    const { data } = await supabase.from("places").select("*");
+    if (data) setPlaces(data);
   }
 
-
-
-async function addPlace() {
-  let imageUrl = null;
-
-  if (imageFile) {
-    try {
-      imageUrl = await uploadToCloudinary(imageFile);
-      console.log("Upload successful:", imageUrl); // just the URL string
-    } catch (error) {
-      console.error("Upload failed:", error);
-      return;
+  async function uploadImages(files: File[]) {
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await uploadToCloudinary(file);
+      urls.push(url);
     }
+    return urls;
   }
 
-  const { error } = await supabase.from("places").insert([
-    {
-      ...newPlace,
-      lat: +newPlace.lat,
-      lon: +newPlace.lon,
-      images: imageUrl ? [imageUrl] : [], // store only the URL array
-    },
-  ]);
+  async function addPlace() {
+    const imageUrls = await uploadImages(imageFiles);
 
-  if (error) {
-    console.error("Database insert failed:", error);
-  } else {
+    await fetch("/api/embed", {
+      method: "POST",
+      body: JSON.stringify({
+        type: "places",
+        data: {
+          ...newPlace,
+          lat: +newPlace.lat,
+          lon: +newPlace.lon,
+          images: imageUrls,
+        },
+      }),
+    });
+
     setNewPlace({
       name: "",
       category: "Heritage",
@@ -83,13 +80,9 @@ async function addPlace() {
       google_map_link: "",
       description: "",
     });
-    setImageFile(null);
+    setImageFiles([]);
     fetchPlaces();
   }
-}
-
-
-
 
   async function deletePlace(id: string) {
     await supabase.from("places").delete().eq("id", id);
@@ -99,8 +92,6 @@ async function addPlace() {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Manage Places</h2>
-
-      {/* Add Place Form */}
       <div className="border p-4 rounded space-y-2">
         <input className="border p-2 w-full" placeholder="Name" value={newPlace.name} onChange={e => setNewPlace({ ...newPlace, name: e.target.value })} />
         <input className="border p-2 w-full" placeholder="Category" value={newPlace.category} onChange={e => setNewPlace({ ...newPlace, category: e.target.value })} />
@@ -109,11 +100,9 @@ async function addPlace() {
         <input className="border p-2 w-full" placeholder="City" value={newPlace.city} onChange={e => setNewPlace({ ...newPlace, city: e.target.value })} />
         <input className="border p-2 w-full" placeholder="Google Map Link" value={newPlace.google_map_link} onChange={e => setNewPlace({ ...newPlace, google_map_link: e.target.value })} />
         <textarea className="border p-2 w-full" placeholder="Description" value={newPlace.description} onChange={e => setNewPlace({ ...newPlace, description: e.target.value })}></textarea>
-        <input type="file" onChange={e => setImageFile(e.target.files?.[0] || null)} />
+        <input type="file" multiple onChange={e => setImageFiles(e.target.files ? Array.from(e.target.files) : [])} />
         <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={addPlace}>Add Place</button>
       </div>
-
-      {/* List */}
       <ul>
         {places.map(p => (
           <li key={p.id} className="flex justify-between border-b py-2">
@@ -126,6 +115,7 @@ async function addPlace() {
   );
 }
 
+/* ---------- Hotels ---------- */
 function HotelsAdmin() {
   const [hotels, setHotels] = useState<any[]>([]);
   const [newHotel, setNewHotel] = useState({
@@ -137,72 +127,41 @@ function HotelsAdmin() {
     priceBand: "Budget",
     google_map_link: "",
   });
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => { fetchHotels(); }, []);
 
   async function fetchHotels() {
-    const { data, error } = await supabase.from("hotels").select("*");
-    if (!error) setHotels(data);
+    const { data } = await supabase.from("hotels").select("*");
+    if (data) setHotels(data);
   }
 
-
-// async function addHotel() {
-//   let imageUrl: string | null = null;
-
-//   if (imageFile) {
-//     imageUrl = await uploadToCloudinary(imageFile); // ✅ Cloudinary instead of Supabase
-//   }
-
-//   const { error } = await supabase.from("hotels").insert([
-//     {
-//       ...newHotel,
-//       lat: +newHotel.lat,
-//       lon: +newHotel.lon,
-//       rating: +newHotel.rating,
-//       images: imageUrl ? [imageUrl] : [], // ✅ store Cloudinary URL
-//     },
-//   ]);
-
-//   if (!error) {
-//     setNewHotel({
-//       name: "",
-//       lat: "",
-//       lon: "",
-//       city: "",
-//       rating: "",
-//       priceBand: "Budget",
-//       google_map_link: "",
-//     });
-//     setImageFile(null);
-//     fetchHotels();
-//   }
-// }
-async function addHotel() {
-  let imageUrl = null;
-  
-  if (imageFile) {
-    try {
-      imageUrl = await uploadToCloudinary(imageFile);
-      console.log('Upload successful:', imageUrl); // Debug log
-    } catch (error) {
-      console.error('Upload failed:', error);
-      return; // Stop if upload fails
+  async function uploadImages(files: File[]): Promise<string[]> {
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await uploadToCloudinary(file);
+      urls.push(url);
     }
+    return urls;
   }
 
-  const { error } = await supabase.from("hotels").insert([{
-    ...newHotel,
-    lat: +newHotel.lat,
-    lon: +newHotel.lon,
-    rating: +newHotel.rating,
-    images: imageUrl ? [imageUrl] : [],
-  }]);
-  
-  if (error) {
-    console.error('Database insert failed:', error);
-  } else {
-    // Reset form only on success
+  async function addHotel() {
+    const imageUrls = await uploadImages(imageFiles);
+
+    await fetch("/api/embed", {
+      method: "POST",
+      body: JSON.stringify({
+        type: "hotels",
+        data: {
+          ...newHotel,
+          lat: +newHotel.lat,
+          lon: +newHotel.lon,
+          rating: +newHotel.rating,
+          images: imageUrls,
+        },
+      }),
+    });
+
     setNewHotel({
       name: "",
       lat: "",
@@ -212,10 +171,9 @@ async function addHotel() {
       google_map_link: "",
       priceBand: "Budget",
     });
-    setImageFile(null);
+    setImageFiles([]);
     fetchHotels();
   }
-}
 
   async function deleteHotel(id: string) {
     await supabase.from("hotels").delete().eq("id", id);
@@ -225,8 +183,6 @@ async function addHotel() {
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-semibold">Manage Hotels</h2>
-
-      {/* Add Hotel Form */}
       <div className="border p-4 rounded space-y-2">
         <input className="border p-2 w-full" placeholder="Name" value={newHotel.name} onChange={e => setNewHotel({ ...newHotel, name: e.target.value })} />
         <input className="border p-2 w-full" placeholder="Latitude" value={newHotel.lat} onChange={e => setNewHotel({ ...newHotel, lat: e.target.value })} />
@@ -239,16 +195,117 @@ async function addHotel() {
           <option>Premium</option>
         </select>
         <input className="border p-2 w-full" placeholder="Google Map Link" value={newHotel.google_map_link} onChange={e => setNewHotel({ ...newHotel, google_map_link: e.target.value })} />
-        <input type="file" onChange={e => setImageFile(e.target.files?.[0] || null)} />
+        <input type="file" multiple onChange={e => setImageFiles(e.target.files ? Array.from(e.target.files) : [])} />
         <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={addHotel}>Add Hotel</button>
       </div>
-
-      {/* List */}
       <ul>
         {hotels.map(h => (
           <li key={h.id} className="flex justify-between border-b py-2">
             <span>{h.name} ({h.city})</span>
             <button className="bg-red-500 text-white px-2 rounded" onClick={() => deleteHotel(h.id)}>Delete</button>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+/* ---------- Events ---------- */
+function EventsAdmin() {
+  const [events, setEvents] = useState<any[]>([]);
+  const [newEvent, setNewEvent] = useState({
+    title: "",
+    category: "",
+    start_date: "",
+    end_date: "",
+    venue: "",
+    city: "",
+    description: "",
+  });
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+
+  useEffect(() => { fetchEvents(); }, []);
+
+  async function fetchEvents() {
+    const { data } = await supabase.from("events").select("*");
+    if (data) setEvents(data);
+  }
+
+  async function uploadImages(files: File[]) {
+    const urls: string[] = [];
+    for (const file of files) {
+      const url = await uploadToCloudinary(file);
+      urls.push(url);
+    }
+    return urls;
+  }
+
+  async function addEvent() {
+    // Generate a UUID for id
+    const id = crypto.randomUUID();
+    // Use only the first image URL
+    const imageUrls = await uploadImages(imageFiles);
+    const image_url = imageUrls[0] || "";
+    // Get current timestamp for created_at
+    const created_at = new Date().toISOString();
+
+    await fetch("/api/embed", {
+      method: "POST",
+      body: JSON.stringify({
+        type: "events",
+        data: {
+          id,
+          title: newEvent.title,
+          category: newEvent.category,
+          start_date: newEvent.start_date,
+          end_date: newEvent.end_date,
+          venue: newEvent.venue,
+          city: newEvent.city,
+          description: newEvent.description,
+          image_url,
+          created_at,
+        },
+      }),
+    });
+    console.log("Event added:", { id, title: newEvent.title });
+
+    setNewEvent({
+      title: "",
+      category: "",
+      start_date: "",
+      end_date: "",
+      venue: "",
+      city: "",
+      description: "",
+    });
+    setImageFiles([]);
+    fetchEvents();
+  }
+
+  async function deleteEvent(id: string) {
+    await supabase.from("events").delete().eq("id", id);
+    fetchEvents();
+  }
+
+  return (
+    <div className="space-y-6">
+      <h2 className="text-xl font-semibold">Manage Events</h2>
+      <div className="border p-4 rounded space-y-2">
+        <input className="border p-2 w-full" placeholder="Title" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} />
+        <input className="border p-2 w-full" placeholder="Category" value={newEvent.category} onChange={e => setNewEvent({ ...newEvent, category: e.target.value })} />
+        <input className="border p-2 w-full" placeholder="Start Date (YYYY-MM-DD)" value={newEvent.start_date} onChange={e => setNewEvent({ ...newEvent, start_date: e.target.value })} />
+        <input className="border p-2 w-full" placeholder="End Date (YYYY-MM-DD)" value={newEvent.end_date} onChange={e => setNewEvent({ ...newEvent, end_date: e.target.value })} />
+        <input className="border p-2 w-full" placeholder="Venue" value={newEvent.venue} onChange={e => setNewEvent({ ...newEvent, venue: e.target.value })} />
+        <input className="border p-2 w-full" placeholder="City" value={newEvent.city} onChange={e => setNewEvent({ ...newEvent, city: e.target.value })} />
+        <textarea className="border p-2 w-full" placeholder="Description" value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })}></textarea>
+        <input type="file" onChange={e => setImageFiles(e.target.files ? Array.from(e.target.files) : [])} />
+        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={addEvent}>Add Event</button>
+      </div>
+      <ul>
+        {events.map(ev => (
+          <li key={ev.id} className="flex justify-between border-b py-2">
+            <span>{ev.title} ({ev.date})</span>
+            <button className="bg-red-500 text-white px-2 rounded" onClick={() => deleteEvent(ev.id)}>Delete</button>
           </li>
         ))}
       </ul>

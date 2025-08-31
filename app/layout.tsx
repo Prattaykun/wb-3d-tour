@@ -34,6 +34,7 @@ export default function RootLayout({
         <BackButton />
         {children}
         {/* <BottomNav /> */}
+        
       </body>
     </html>
   );

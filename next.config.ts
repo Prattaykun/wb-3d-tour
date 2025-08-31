@@ -7,7 +7,8 @@ const nextConfig: NextConfig = {
     ignoreDuringBuilds: true,
   },
   images: {
-    domains: ['zjzritpuuijofnxflghd.supabase.co'],
+    unoptimized: true, // ✅ Required for static export with <Image />
+    domains: ["zjzritpuuijofnxflghd.supabase.co"],
   },
 };
 

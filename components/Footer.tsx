@@ -9,7 +9,7 @@ export default function Footer() {
   return (
     <footer
       id="contact"
-      className="bg-gradient-to-br from-gray-900 via-teal-900 to-cyan-900 text-white py-16 relative overflow-hidden"
+      className="bg-gradient-to-br from-gray-900 via-teal-900 to-cyan-900 text-white py-16 relative overflow-hidden max-sm:hidden"
     >
       <div className="absolute inset-0 bg-radial-footer pointer-events-none" />
       <div className="max-w-7xl mx-auto px-6 relative z-10">

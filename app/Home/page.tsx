@@ -11,6 +11,7 @@ import CulturalHighlights from "../../components/home/CulturalHighlights";
 import TestimonialSection from "../../components/home/TestimonialSection";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
+import Chatbot from "@/components/Chatbot";
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -121,7 +122,7 @@ export default function Home() {
       </section>
 
       <TestimonialSection />
-
+      <Chatbot />
       {/* Bottom Navigation */}
       <BottomNav />
     </>

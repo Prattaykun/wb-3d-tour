@@ -4,25 +4,77 @@ import { useState, useEffect } from "react";
 import * as Tabs from "@radix-ui/react-tabs";
 import { uploadToCloudinary } from "../../utils/cloudinary/client";
 import { supabase } from "../../utils/supabase/server";
+import { motion } from "framer-motion";
 
 export default function AdminPage() {
   return (
-    <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Admin Dashboard</h1>
+    <div className="p-6 bg-gray-50 min-h-screen">
+      <motion.h1
+  initial={{ opacity: 0, y: -40, scale: 0.9 }}
+  animate={{ opacity: 1, y: 0, scale: 1 }}
+  transition={{ duration: 0.8, ease: "easeOut" }}
+  className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text 
+             bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 drop-shadow-lg"
+>
+  ⚙️ Admin Dashboard 🔧
+</motion.h1>
+
 
       <Tabs.Root defaultValue="places">
-        <Tabs.List className="flex space-x-4 border-b">
-          <Tabs.Trigger value="places" className="px-4 py-2">Places</Tabs.Trigger>
-          <Tabs.Trigger value="hotels" className="px-4 py-2">Hotels</Tabs.Trigger>
-          <Tabs.Trigger value="events" className="px-4 py-2">Events</Tabs.Trigger>
+        <Tabs.List className="flex space-x-6 border-b border-gray-200 mb-6">
+          <Tabs.Trigger
+            value="places"
+            className="px-6 py-3 font-semibold text-gray-600 rounded-t-xl transition
+                       hover:text-indigo-600 hover:bg-indigo-50
+                       data-[state=active]:bg-gradient-to-r data-[state=active]:from-indigo-500 data-[state=active]:to-purple-500
+                       data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
+            Places
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="hotels"
+            className="px-6 py-3 font-semibold text-gray-600 rounded-t-xl transition
+                       hover:text-indigo-600 hover:bg-indigo-50
+                       data-[state=active]:bg-gradient-to-r data-[state=active]:from-green-500 data-[state=active]:to-emerald-500
+                       data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
+            Hotels
+          </Tabs.Trigger>
+          <Tabs.Trigger
+            value="events"
+            className="px-6 py-3 font-semibold text-gray-600 rounded-t-xl transition
+                       hover:text-indigo-600 hover:bg-indigo-50
+                       data-[state=active]:bg-gradient-to-r data-[state=active]:from-pink-500 data-[state=active]:to-rose-500
+                       data-[state=active]:text-white data-[state=active]:shadow-md"
+          >
+            Events
+          </Tabs.Trigger>
         </Tabs.List>
 
-        <Tabs.Content value="places"><PlacesAdmin /></Tabs.Content>
-        <Tabs.Content value="hotels"><HotelsAdmin /></Tabs.Content>
-        <Tabs.Content value="events"><EventsAdmin /></Tabs.Content>
+        <Tabs.Content value="places">
+          <PlacesAdmin />
+        </Tabs.Content>
+        <Tabs.Content value="hotels">
+          <HotelsAdmin />
+        </Tabs.Content>
+        <Tabs.Content value="events">
+          <EventsAdmin />
+        </Tabs.Content>
       </Tabs.Root>
     </div>
   );
+}
+
+/* ---------- Shared Upload Helper ---------- */
+async function uploadImages(files: (File | null)[]): Promise<string[]> {
+  const urls: string[] = [];
+  for (const file of files) {
+    if (file) {
+      const url = await uploadToCloudinary(file);
+      urls.push(url);
+    }
+  }
+  return urls;
 }
 
 /* ---------- Places ---------- */
@@ -30,34 +82,26 @@ function PlacesAdmin() {
   const [places, setPlaces] = useState<any[]>([]);
   const [newPlace, setNewPlace] = useState({
     name: "",
-    category: "Heritage",
+    category: "",
     lat: "",
     lon: "",
     city: "",
     google_map_link: "",
     description: "",
   });
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
 
-  useEffect(() => { fetchPlaces(); }, []);
+  useEffect(() => {
+    fetchPlaces();
+  }, []);
 
   async function fetchPlaces() {
     const { data } = await supabase.from("places").select("*");
     if (data) setPlaces(data);
   }
 
-  async function uploadImages(files: File[]) {
-    const urls: string[] = [];
-    for (const file of files) {
-      const url = await uploadToCloudinary(file);
-      urls.push(url);
-    }
-    return urls;
-  }
-
   async function addPlace() {
     const imageUrls = await uploadImages(imageFiles);
-
     await fetch("/api/embed", {
       method: "POST",
       body: JSON.stringify({
@@ -70,7 +114,6 @@ function PlacesAdmin() {
         },
       }),
     });
-
     setNewPlace({
       name: "",
       category: "Heritage",
@@ -84,34 +127,38 @@ function PlacesAdmin() {
     fetchPlaces();
   }
 
+  function handleImageChange(index: number, file: File | null) {
+    const updated = [...imageFiles];
+    updated[index] = file;
+    setImageFiles(updated);
+  }
+
   async function deletePlace(id: string) {
     await supabase.from("places").delete().eq("id", id);
     fetchPlaces();
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Manage Places</h2>
-      <div className="border p-4 rounded space-y-2">
-        <input className="border p-2 w-full" placeholder="Name" value={newPlace.name} onChange={e => setNewPlace({ ...newPlace, name: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Category" value={newPlace.category} onChange={e => setNewPlace({ ...newPlace, category: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Latitude" value={newPlace.lat} onChange={e => setNewPlace({ ...newPlace, lat: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Longitude" value={newPlace.lon} onChange={e => setNewPlace({ ...newPlace, lon: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="City" value={newPlace.city} onChange={e => setNewPlace({ ...newPlace, city: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Google Map Link" value={newPlace.google_map_link} onChange={e => setNewPlace({ ...newPlace, google_map_link: e.target.value })} />
-        <textarea className="border p-2 w-full" placeholder="Description" value={newPlace.description} onChange={e => setNewPlace({ ...newPlace, description: e.target.value })}></textarea>
-        <input type="file" multiple onChange={e => setImageFiles(e.target.files ? Array.from(e.target.files) : [])} />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={addPlace}>Add Place</button>
-      </div>
-      <ul>
-        {places.map(p => (
-          <li key={p.id} className="flex justify-between border-b py-2">
-            <span>{p.name} ({p.city})</span>
-            <button className="bg-red-500 text-white px-2 rounded" onClick={() => deletePlace(p.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Section
+      title="🏛 Manage Places"
+      items={places}
+      fields={[
+        { placeholder: "Name", key: "name" },
+        { placeholder: "Category", key: "category" },
+        { placeholder: "Latitude", key: "lat" },
+        { placeholder: "Longitude", key: "lon" },
+        { placeholder: "City", key: "city" },
+        { placeholder: "Google Map Link", key: "google_map_link" },
+      ]}
+      descriptionKey="description"
+      newItem={newPlace}
+      setNewItem={setNewPlace}
+      imageFiles={imageFiles}
+      setImageFiles={setImageFiles}
+      handleImageChange={handleImageChange}
+      addItem={addPlace}
+      deleteItem={deletePlace}
+    />
   );
 }
 
@@ -127,27 +174,19 @@ function HotelsAdmin() {
     priceBand: "Budget",
     google_map_link: "",
   });
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
 
-  useEffect(() => { fetchHotels(); }, []);
+  useEffect(() => {
+    fetchHotels();
+  }, []);
 
   async function fetchHotels() {
     const { data } = await supabase.from("hotels").select("*");
     if (data) setHotels(data);
   }
 
-  async function uploadImages(files: File[]): Promise<string[]> {
-    const urls: string[] = [];
-    for (const file of files) {
-      const url = await uploadToCloudinary(file);
-      urls.push(url);
-    }
-    return urls;
-  }
-
   async function addHotel() {
     const imageUrls = await uploadImages(imageFiles);
-
     await fetch("/api/embed", {
       method: "POST",
       body: JSON.stringify({
@@ -161,18 +200,23 @@ function HotelsAdmin() {
         },
       }),
     });
-
     setNewHotel({
       name: "",
       lat: "",
       lon: "",
       city: "",
       rating: "",
-      google_map_link: "",
       priceBand: "Budget",
+      google_map_link: "",
     });
     setImageFiles([]);
     fetchHotels();
+  }
+
+  function handleImageChange(index: number, file: File | null) {
+    const updated = [...imageFiles];
+    updated[index] = file;
+    setImageFiles(updated);
   }
 
   async function deleteHotel(id: string) {
@@ -181,32 +225,29 @@ function HotelsAdmin() {
   }
 
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Manage Hotels</h2>
-      <div className="border p-4 rounded space-y-2">
-        <input className="border p-2 w-full" placeholder="Name" value={newHotel.name} onChange={e => setNewHotel({ ...newHotel, name: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Latitude" value={newHotel.lat} onChange={e => setNewHotel({ ...newHotel, lat: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Longitude" value={newHotel.lon} onChange={e => setNewHotel({ ...newHotel, lon: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="City" value={newHotel.city} onChange={e => setNewHotel({ ...newHotel, city: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Rating" value={newHotel.rating} onChange={e => setNewHotel({ ...newHotel, rating: e.target.value })} />
-        <select className="border p-2 w-full" value={newHotel.priceBand} onChange={e => setNewHotel({ ...newHotel, priceBand: e.target.value })}>
-          <option>Budget</option>
-          <option>Mid</option>
-          <option>Premium</option>
-        </select>
-        <input className="border p-2 w-full" placeholder="Google Map Link" value={newHotel.google_map_link} onChange={e => setNewHotel({ ...newHotel, google_map_link: e.target.value })} />
-        <input type="file" multiple onChange={e => setImageFiles(e.target.files ? Array.from(e.target.files) : [])} />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={addHotel}>Add Hotel</button>
-      </div>
-      <ul>
-        {hotels.map(h => (
-          <li key={h.id} className="flex justify-between border-b py-2">
-            <span>{h.name} ({h.city})</span>
-            <button className="bg-red-500 text-white px-2 rounded" onClick={() => deleteHotel(h.id)}>Delete</button>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <Section
+      title="🏨 Manage Hotels"
+      items={hotels}
+      fields={[
+        { placeholder: "Name", key: "name" },
+        { placeholder: "Latitude", key: "lat" },
+        { placeholder: "Longitude", key: "lon" },
+        { placeholder: "City", key: "city" },
+        { placeholder: "Rating", key: "rating" },
+        { placeholder: "Google Map Link", key: "google_map_link" },
+      ]}
+      selectField={{
+        key: "priceBand",
+        options: ["Budget", "Mid", "Premium"],
+      }}
+      newItem={newHotel}
+      setNewItem={setNewHotel}
+      imageFiles={imageFiles}
+      setImageFiles={setImageFiles}
+      handleImageChange={handleImageChange}
+      addItem={addHotel}
+      deleteItem={deleteHotel}
+    />
   );
 }
 
@@ -222,53 +263,33 @@ function EventsAdmin() {
     city: "",
     description: "",
   });
-  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
 
-  useEffect(() => { fetchEvents(); }, []);
+  useEffect(() => {
+    fetchEvents();
+  }, []);
 
   async function fetchEvents() {
     const { data } = await supabase.from("events").select("*");
     if (data) setEvents(data);
   }
 
-  async function uploadImages(files: File[]) {
-    const urls: string[] = [];
-    for (const file of files) {
-      const url = await uploadToCloudinary(file);
-      urls.push(url);
-    }
-    return urls;
-  }
-
   async function addEvent() {
-    // Generate a UUID for id
     const id = crypto.randomUUID();
-    // Use only the first image URL
     const imageUrls = await uploadImages(imageFiles);
-    const image_url = imageUrls[0] || "";
-    // Get current timestamp for created_at
     const created_at = new Date().toISOString();
-
     await fetch("/api/embed", {
       method: "POST",
       body: JSON.stringify({
         type: "events",
         data: {
           id,
-          title: newEvent.title,
-          category: newEvent.category,
-          start_date: newEvent.start_date,
-          end_date: newEvent.end_date,
-          venue: newEvent.venue,
-          city: newEvent.city,
-          description: newEvent.description,
-          image_url,
+          ...newEvent,
+          images: imageUrls,
           created_at,
         },
       }),
     });
-    console.log("Event added:", { id, title: newEvent.title });
-
     setNewEvent({
       title: "",
       category: "",
@@ -282,30 +303,189 @@ function EventsAdmin() {
     fetchEvents();
   }
 
+  function handleImageChange(index: number, file: File | null) {
+    const updated = [...imageFiles];
+    updated[index] = file;
+    setImageFiles(updated);
+  }
+
   async function deleteEvent(id: string) {
     await supabase.from("events").delete().eq("id", id);
     fetchEvents();
   }
 
   return (
+    <Section
+      title="🎉 Manage Events"
+      items={events}
+      fields={[
+        { placeholder: "Title", key: "title" },
+        { placeholder: "Category", key: "category" },
+        { placeholder: "Start Date (YYYY-MM-DD)", key: "start_date" },
+        { placeholder: "End Date (YYYY-MM-DD)", key: "end_date" },
+        { placeholder: "Venue", key: "venue" },
+        { placeholder: "City", key: "city" },
+      ]}
+      descriptionKey="description"
+      newItem={newEvent}
+      setNewItem={setNewEvent}
+      imageFiles={imageFiles}
+      setImageFiles={setImageFiles}
+      handleImageChange={handleImageChange}
+      addItem={addEvent}
+      deleteItem={deleteEvent}
+    />
+  );
+}
+
+/* ---------- Reusable Section Component ---------- */
+function Section({
+  title,
+  items,
+  fields,
+  selectField,
+  descriptionKey,
+  newItem,
+  setNewItem,
+  imageFiles,
+  setImageFiles,
+  handleImageChange,
+  addItem,
+  deleteItem,
+}: any) {
+  // Drag and drop handler
+  function handleDrop(e: React.DragEvent<HTMLLabelElement>, index: number) {
+    e.preventDefault();
+    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
+      handleImageChange(index, e.dataTransfer.files[0]);
+    }
+  }
+
+  // Remove image
+  function removeImage(index: number) {
+    const updated = [...imageFiles];
+    updated.splice(index, 1);
+    setImageFiles(updated);
+  }
+
+  return (
     <div className="space-y-6">
-      <h2 className="text-xl font-semibold">Manage Events</h2>
-      <div className="border p-4 rounded space-y-2">
-        <input className="border p-2 w-full" placeholder="Title" value={newEvent.title} onChange={e => setNewEvent({ ...newEvent, title: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Category" value={newEvent.category} onChange={e => setNewEvent({ ...newEvent, category: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Start Date (YYYY-MM-DD)" value={newEvent.start_date} onChange={e => setNewEvent({ ...newEvent, start_date: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="End Date (YYYY-MM-DD)" value={newEvent.end_date} onChange={e => setNewEvent({ ...newEvent, end_date: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="Venue" value={newEvent.venue} onChange={e => setNewEvent({ ...newEvent, venue: e.target.value })} />
-        <input className="border p-2 w-full" placeholder="City" value={newEvent.city} onChange={e => setNewEvent({ ...newEvent, city: e.target.value })} />
-        <textarea className="border p-2 w-full" placeholder="Description" value={newEvent.description} onChange={e => setNewEvent({ ...newEvent, description: e.target.value })}></textarea>
-        <input type="file" onChange={e => setImageFiles(e.target.files ? Array.from(e.target.files) : [])} />
-        <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={addEvent}>Add Event</button>
+      <h2 className="text-2xl font-bold text-gray-900">{title}</h2>
+      <div className="bg-white border p-6 rounded-2xl shadow space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          {fields.map((field: any) => (
+            <input
+              key={field.key}
+              className="border p-2 rounded-lg text-gray-900"
+              placeholder={field.placeholder}
+              value={newItem[field.key]}
+              onChange={(e) =>
+                setNewItem({ ...newItem, [field.key]: e.target.value })
+              }
+            />
+          ))}
+          {selectField && (
+            <select
+              className="border p-2 rounded-lg col-span-2 text-gray-900"
+              value={newItem[selectField.key]}
+              onChange={(e) =>
+                setNewItem({ ...newItem, [selectField.key]: e.target.value })
+              }
+            >
+              {selectField.options.map((opt: string) => (
+                <option key={opt}>{opt}</option>
+              ))}
+            </select>
+          )}
+        </div>
+        {descriptionKey && (
+          <textarea
+            className="border p-2 w-full rounded-lg text-gray-900"
+            placeholder="Description"
+            value={newItem[descriptionKey]}
+            onChange={(e) =>
+              setNewItem({ ...newItem, [descriptionKey]: e.target.value })
+            }
+          />
+        )}
+        <div>
+          <p className="text-sm font-medium text-gray-700 mb-2">Upload Images</p>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+            {imageFiles.map((file: any, i: number) => (
+              <label
+                key={i}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => handleDrop(e, i)}
+                className="border-2 border-dashed border-gray-400 rounded-lg h-24 flex items-center justify-center 
+                           text-gray-800 font-semibold text-sm cursor-pointer hover:border-indigo-500 transition relative overflow-hidden"
+              >
+                {file ? (
+                  <>
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`preview-${i}`}
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                    <button
+                      type="button"
+                      className="absolute top-1 right-1 bg-red-500 text-white rounded-full px-2 text-xs"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        removeImage(i);
+                      }}
+                    >
+                      ❌
+                    </button>
+                  </>
+                ) : (
+                  <>+ Add</>
+                )}
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={(e) =>
+                    handleImageChange(i, e.target.files?.[0] || null)
+                  }
+                />
+              </label>
+            ))}
+            {/* Add new image box */}
+            <button
+              type="button"
+              onClick={() => setImageFiles([...imageFiles, null])}
+              className="border-2 border-dashed border-gray-400 rounded-lg h-24 flex items-center justify-center 
+                         text-gray-500 hover:border-indigo-500 transition"
+            >
+              ➕ Add More
+            </button>
+          </div>
+        </div>
+        <button
+          className="w-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 text-white py-3 rounded-xl font-semibold hover:opacity-90 transition"
+          onClick={addItem}
+        >
+          ➕ Add
+        </button>
       </div>
-      <ul>
-        {events.map(ev => (
-          <li key={ev.id} className="flex justify-between border-b py-2">
-            <span>{ev.title} ({ev.date})</span>
-            <button className="bg-red-500 text-white px-2 rounded" onClick={() => deleteEvent(ev.id)}>Delete</button>
+
+      <ul className="divide-y divide-gray-200">
+        {items.map((item: any) => (
+          <li
+            key={item.id}
+            className="flex justify-between items-center py-3 px-2 hover:bg-gray-50 rounded-lg"
+          >
+            <span className="text-gray-900 font-semibold">
+              {item.name || item.title}{" "}
+              <span className="text-gray-600 font-medium">
+                ({item.city || item.start_date || ""})
+              </span>
+            </span>
+            <button
+              className="px-3 py-1 bg-red-500 text-white rounded-lg hover:bg-red-600"
+              onClick={() => deleteItem(item.id)}
+            >
+              Delete
+            </button>
           </li>
         ))}
       </ul>

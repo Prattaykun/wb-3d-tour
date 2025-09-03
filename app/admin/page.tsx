@@ -87,6 +87,9 @@ function PlacesAdmin() {
     lon: "",
     city: "",
     google_map_link: "",
+    entry_fee_inr: "Free",
+    hours: "",
+    tips: [""],
     description: "",
   });
   const [imageFiles, setImageFiles] = useState<(File | null)[]>([]);
@@ -116,11 +119,14 @@ function PlacesAdmin() {
     });
     setNewPlace({
       name: "",
-      category: "Heritage",
+      category: "",
       lat: "",
       lon: "",
       city: "",
       google_map_link: "",
+      entry_fee_inr: "",
+      hours: "",
+      tips: [""],
       description: "",
     });
     setImageFiles([]);
@@ -149,6 +155,9 @@ function PlacesAdmin() {
         { placeholder: "Longitude", key: "lon" },
         { placeholder: "City", key: "city" },
         { placeholder: "Google Map Link", key: "google_map_link" },
+        { placeholder: "Entry Fee (INR or Free)", key: "entry_fee_inr" },
+        { placeholder: "Hours", key: "hours" },
+        { placeholder: "Tips", key: "tips" },
       ]}
       descriptionKey="description"
       newItem={newPlace}
@@ -374,15 +383,54 @@ function Section({
       <div className="bg-white border p-6 rounded-2xl shadow space-y-4">
         <div className="grid grid-cols-2 gap-4">
           {fields.map((field: any) => (
-            <input
-              key={field.key}
-              className="border p-2 rounded-lg text-gray-900"
-              placeholder={field.placeholder}
-              value={newItem[field.key]}
-              onChange={(e) =>
-                setNewItem({ ...newItem, [field.key]: e.target.value })
-              }
-            />
+            field.key === "tips" ? (
+              <div key="tips" className="col-span-2">
+                <label className="block text-gray-700 font-medium mb-1">Tips</label>
+                {newItem.tips.map((tip: string, idx: number) => (
+                  <div key={idx} className="flex gap-2 mb-2">
+                    <input
+                      className="border p-2 rounded-lg text-gray-900 flex-1"
+                      placeholder={`Tip #${idx + 1}`}
+                      value={tip}
+                      onChange={e => {
+                        const updated = [...newItem.tips];
+                        updated[idx] = e.target.value;
+                        setNewItem({ ...newItem, tips: updated });
+                      }}
+                    />
+                    <button
+                      type="button"
+                      className="bg-red-500 text-white px-2 rounded"
+                      onClick={() => {
+                        const updated = [...newItem.tips];
+                        updated.splice(idx, 1);
+                        setNewItem({ ...newItem, tips: updated });
+                      }}
+                      disabled={newItem.tips.length === 1}
+                    >
+                      ❌
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  className="bg-indigo-500 text-white px-3 py-1 rounded"
+                  onClick={() => setNewItem({ ...newItem, tips: [...newItem.tips, ""] })}
+                >
+                  ➕ Add Tip
+                </button>
+              </div>
+            ) : (
+              <input
+                key={field.key}
+                className="border p-2 rounded-lg text-gray-900"
+                placeholder={field.placeholder}
+                value={newItem[field.key]}
+                onChange={(e) =>
+                  setNewItem({ ...newItem, [field.key]: e.target.value })
+                }
+              />
+            )
           ))}
           {selectField && (
             <select

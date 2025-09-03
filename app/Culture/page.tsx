@@ -3,12 +3,14 @@
 import { motion } from "framer-motion";
 import { Music, Palette, Book, Theater } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 import CultureSection from "../../components/culture/CultureSection";
 import ArtistShowcase from "../../components/culture/ArtistShowcase";
 import TraditionTimeline from "../../components/culture/TraditionTimeline";
 
 export default function Culture() {
+  const router = useRouter();
 const culturalAspects = [
   {
     id: "music-dance",
@@ -153,7 +155,7 @@ const culturalAspects = [
               Join cultural workshops, attend performances, and connect with
               local artists to truly understand Bengali culture
             </p>
-            <button className="bg-white text-purple-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg">
+            <button className="bg-white text-purple-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 shadow-lg"onClick={() => router.push("/events")}>
               Find Cultural Events
             </button>
           </motion.div>

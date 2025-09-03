@@ -2,12 +2,14 @@
 
 import React, { useState } from "react";
 import { MapPin, Clock, Star, Camera, Info, Heart } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 import HeritageCard from "../../components/heritage/HeritageCard";
 import HeritageFilter from "../../components/heritage/HeritageFilter";
 
 export default function Heritage() {
   const [activeFilter, setActiveFilter] = useState("all");
+  const router = useRouter();
 
   const heritageSites = [
     {
@@ -196,7 +198,10 @@ export default function Heritage() {
             Let us help you create an unforgettable experience exploring West
             Bengal&apos;s rich heritage
           </p>
-          <button className="bg-white text-indigo-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105">
+          
+          <button
+           
+          className="bg-white text-indigo-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105"onClick={() => router.push("/tourselect")} >
             Get Personalized Itinerary
           </button>
         </div>

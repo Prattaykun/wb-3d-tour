@@ -38,11 +38,11 @@ export default function Navbar() {
 
       {/* Desktop Menu */}
       <div className="hidden md:flex items-center gap-6 font-semibold text-gray-200">
-        <button onClick={() => go("destinations")} className={pathname === "/#destinations" ? "text-indigo-400" : "hover:text-indigo-400"}>
-          Destinations
+        <button onClick={() => router.push("/Culture")} className={pathname === "/#Culture&Events" ? "text-indigo-400" : "hover:text-indigo-400"}>
+          Culture&Events
         </button>
-        <button onClick={() => go("how-it-works")} className={pathname === "/#how-it-works" ? "text-indigo-400" : "hover:text-indigo-400"}>
-          How It Works
+        <button onClick={() =>router.push("/Stores")} className={pathname === "/#Stores" ? "text-indigo-400" : "hover:text-indigo-400"}>
+          Stores
         </button>
         <button onClick={() => go("contact")} className={pathname === "/#contact" ? "text-indigo-400" : "hover:text-indigo-400"}>
           Contact

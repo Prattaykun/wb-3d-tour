@@ -18,10 +18,9 @@ type Profile = {
 export default function MenuToggle() {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
-  
+
   useEffect(() => {
     const getProfile = async () => {
-        
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -44,12 +43,9 @@ export default function MenuToggle() {
     };
 
     getProfile();
-
-    // 🔑 also subscribe to auth changes so UI updates correctly
     const { data: listener } = supabase.auth.onAuthStateChange(() => {
       getProfile();
     });
-
     return () => {
       listener.subscription.unsubscribe();
     };
@@ -64,25 +60,24 @@ export default function MenuToggle() {
     }
   };
 
-  // Gradient animated border
-  const borderClasses =
+  // ✨ Toggle Button CSS
+  const buttonClasses =
     "relative w-12 h-12 rounded-full flex items-center justify-center cursor-pointer " +
-    "bg-white shadow-md " +
-    "before:absolute before:inset-0 before:rounded-full before:p-[2px] " +
-    "before:bg-gradient-to-r before:from-blue-500 before:via-green-500 before:to-purple-500 " +
-    "before:animate-[spin_3s_linear_infinite] before:-z-10";
+    "bg-white border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200";
 
   return (
-    <div className="fixed top-4 right-4 z-50">
+    <div
+      className="fixed top-26 left-5 z-60" // 📍 Position adjust here
+    >
       {/* Toggle Button */}
       <motion.div
-        className={borderClasses}
+        className={buttonClasses}
         onClick={() => setOpen(!open)}
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
+        whileHover={{ scale: 1.08 }}
+        whileTap={{ scale: 0.92 }}
       >
         {open ? (
-          <X className="text-gray-700 animate-spin-slow" />
+          <X className="text-gray-600" />
         ) : profile ? (
           <span className="font-bold text-gray-700">
             {profile.name?.[0].toUpperCase() ?? "U"}
@@ -91,73 +86,68 @@ export default function MenuToggle() {
           <img
             src="/media/icons/toilet.png"
             alt="guest"
-            className="w-6 h-6 opacity-80"
+            className="w-6 h-6 opacity-70"
           />
         )}
       </motion.div>
 
-      {/* Menu Options */}
+      {/* Dropdown Menu */}
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0, y: -6 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute right-14 top-0 flex flex-col gap-3"
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-0 mt-3 w-56 rounded-2xl bg-white border border-gray-200 shadow-xl overflow-hidden" // 📍 Adjust dropdown width/position here
           >
-            {/* My Account */}
-            <motion.div
-              whileHover={{ x: -10 }}
-              className="flex items-center gap-2"
-            >
-              <span className="text-sm font-medium">My Account</span>
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                <User size={18} className="text-blue-600" />
-              </div>
-            </motion.div>
+            <div className="p-3 border-b border-gray-100">
+              <p className="text-sm font-medium text-gray-800">
+                {profile?.name ?? "Guest User"}
+              </p>
+              <p className="text-xs text-gray-500">
+                {profile?.role ? profile.role.toUpperCase() : "No Role"}
+              </p>
+            </div>
 
-            {/* Role specific */}
-            {profile?.role === "consumer" && (
-              <motion.div
-                whileHover={{ x: -10 }}
-                className="flex items-center gap-2"
+            <div className="flex flex-col">
+              {/* My Account */}
+              <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                <span className="text-sm">My Account</span>
+                <User size={18} className="text-blue-500" />
+              </button>
+
+              {/* Consumer only */}
+              {profile?.role === "consumer" && (
+                <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                  <span className="text-sm">My Tour Plans</span>
+                  <Map size={18} className="text-green-500" />
+                </button>
+              )}
+
+              {/* Business only */}
+              {profile?.role === "business" && (
+                <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                  <span className="text-sm">Business Status</span>
+                  <Briefcase size={18} className="text-purple-500" />
+                </button>
+              )}
+
+              {/* Auth */}
+              <button
+                onClick={handleAuthAction}
+                className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700"
               >
-                <span className="text-sm font-medium">My Tour Plans</span>
-                <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
-                  <Map size={18} className="text-green-600" />
-                </div>
-              </motion.div>
-            )}
-
-            {profile?.role === "business" && (
-              <motion.div
-                whileHover={{ x: -10 }}
-                className="flex items-center gap-2"
-              >
-                <span className="text-sm font-medium">Business Status</span>
-                <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center">
-                  <Briefcase size={18} className="text-purple-600" />
-                </div>
-              </motion.div>
-            )}
-
-            {/* Auth Option */}
-            <motion.div
-              whileHover={{ x: -10 }}
-              className="flex items-center gap-2 cursor-pointer"
-              onClick={handleAuthAction}
-            >
-              <span className="text-sm font-medium">
-                {profile ? "Logout" : "Login"}
-              </span>
-              <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                <span className="text-sm">
+                  {profile ? "Logout" : "Login"}
+                </span>
                 {profile ? (
-                  <LogOut size={18} className="text-red-600" />
+                  <LogOut size={18} className="text-red-500" />
                 ) : (
-                  <LogIn size={18} className="text-red-600" />
+                  <LogIn size={18} className="text-red-500" />
                 )}
-              </div>
-            </motion.div>
+              </button>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

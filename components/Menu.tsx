@@ -16,6 +16,9 @@ type Profile = {
 };
 
 export default function MenuToggle() {
+  const handleBusinessAction = () => {
+    window.location.href = "/BusinessLoader";
+  };
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<Profile | null>(null);
 
@@ -59,6 +62,8 @@ export default function MenuToggle() {
       window.location.href = "/auth/login";
     }
   };
+
+
 
   // ✨ Toggle Button CSS
   const buttonClasses =
@@ -127,7 +132,10 @@ export default function MenuToggle() {
 
               {/* Business only */}
               {profile?.role === "business" && (
-                <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                <button
+                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700"
+                  onClick={handleBusinessAction}
+                >
                   <span className="text-sm">Business Status</span>
                   <Briefcase size={18} className="text-purple-500" />
                 </button>

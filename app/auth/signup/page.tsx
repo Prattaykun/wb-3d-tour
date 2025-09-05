@@ -38,12 +38,14 @@ export default function SignupPage() {
     const userId = data?.user?.id;
     if (userId) {
       await supabase.rpc("create_profiles_table_if_not_exists");
-      await supabase.from("profiles").insert({
-        id: userId,
-        full_name,
-        email,
-        created_at: new Date().toISOString(),
+     await supabase.from("profiles").insert({
+      id: userId,
+       full_name,
+      email,
+      role,  
+      created_at: new Date().toISOString(),
       });
+
     }
     router.push("/auth/confirmEmail");
   };

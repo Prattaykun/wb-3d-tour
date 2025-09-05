@@ -59,7 +59,7 @@ export default function BusinessLoaderPage() {
         // 🚀 already has business profile → dashboard
         router.push("/BusinessDashboard");
       } else {
-        // 🚀 no business profile → business form
+        router.push("/BusinessForm");
         setProfile(profile); // save profile for client
         setLoading(false);
       }

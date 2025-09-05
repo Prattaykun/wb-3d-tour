@@ -277,7 +277,16 @@ export default function WBMap() {
 
       {/* Info Panel */}
       {activePlace && (
-        <div className="absolute right-0 top-0 lg:top-0 h-full lg:h-full w-full lg:w-[360px] bg-black shadow-lg p-4 overflow-y-auto z-20">
+  <div
+    className="
+      absolute 
+      lg:right-0 lg:top-0 
+      lg:h-full lg:w-[360px] 
+      w-full h-[44%] bottom-0 
+      bg-black shadow-lg p-4 overflow-y-auto z-20
+      rounded-t-2xl
+    "
+  >
           <button
             className="text-xs text-red-500 absolute right-4 top-4"
             onClick={() => setActiveId(null)}

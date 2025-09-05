@@ -142,7 +142,7 @@ export default function FeaturedDestinations() {
         {/* View All Button */}
         <div className="text-center mt-16">
           <Link
-            href="/Heritage"
+            href="/map"
             className="inline-flex items-center bg-indigo-600 text-white px-8 py-3 rounded-full font-semibold hover:bg-purple-600 transition-all transform hover:scale-105 shadow-lg"
           >
             View All Destinations

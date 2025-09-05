@@ -11,8 +11,8 @@ import CulturalHighlights from "../components/home/CulturalHighlights";
 import TestimonialSection from "../components/home/TestimonialSection";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
+// import Navbar from "@/components/Navbar";
+// import Footer from "@/components/Footer";
 import Menu from "@/components/Menu";
 import Chatbot from "@/components/Chatbot";
 
@@ -53,7 +53,7 @@ export default function Home() {
   return (
     <>
       {/* Main Content */}
-      <Navbar />
+      {/* <Navbar /> */}
       <Menu />
       <HeroSection heroImages={heroImages} currentImageIndex={currentImageIndex} />
 
@@ -154,7 +154,7 @@ export default function Home() {
           </>
         )}
       </div>
-      <Footer />
+      {/* <Footer /> */}
     </>
   );
 }

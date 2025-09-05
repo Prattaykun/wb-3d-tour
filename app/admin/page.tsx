@@ -1,24 +1,73 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import * as Tabs from "@radix-ui/react-tabs";
 import { uploadToCloudinary } from "../../utils/cloudinary/client";
-import { supabase } from "../../utils/supabase/server";
+import { createClient } from "@supabase/supabase-js";
 import { motion } from "framer-motion";
 
+// ✅ Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
 export default function AdminPage() {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const checkRole = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        router.replace("/auth/login"); // 🚪 Not logged in → redirect
+        return;
+      }
+
+      // 👇 Fetch user role from profiles (adjust table/column if needed)
+      const { data: profile, error } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .single();
+
+      if (error || !profile || profile.role !== "admin") {
+        router.replace("/login"); // 🚪 Not admin → redirect
+        return;
+      }
+
+      setLoading(false);
+    };
+
+    checkRole();
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-r from-indigo-100 to-purple-200">
+        <div className="p-8 rounded-2xl shadow-lg bg-white text-center animate-pulse">
+          <h1 className="text-2xl font-bold text-indigo-600">Checking access...</h1>
+          <p className="mt-2 text-gray-600">Redirecting if unauthorized 🚀</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
       <motion.h1
-  initial={{ opacity: 0, y: -40, scale: 0.9 }}
-  animate={{ opacity: 1, y: 0, scale: 1 }}
-  transition={{ duration: 0.8, ease: "easeOut" }}
-  className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text 
+        initial={{ opacity: 0, y: -40, scale: 0.9 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="text-4xl font-extrabold mb-8 text-center text-transparent bg-clip-text 
              bg-gradient-to-r from-indigo-600 via-purple-500 to-pink-500 drop-shadow-lg"
->
-  ⚙️ Admin Dashboard 🔧
-</motion.h1>
-
+      >
+        ⚙️ Admin Dashboard 🔧
+      </motion.h1>
 
       <Tabs.Root defaultValue="places">
         <Tabs.List className="flex space-x-6 border-b border-gray-200 mb-6">

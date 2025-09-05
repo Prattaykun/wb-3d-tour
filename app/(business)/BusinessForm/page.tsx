@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
-import ClientChatForm from "@/app/(business)/ClientChatForm/page";
+import ClientChatForm from "./ClientChatForm"
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

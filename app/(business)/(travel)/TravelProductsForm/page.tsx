@@ -190,30 +190,29 @@ export default function TravelAgencyProductsForm() {
 
 
 // ---------------- Submit ----------------
+// ---------------- Submit ----------------
 const onSubmit = async () => {
   setBusy(true);
   setMessage(null);
 
   try {
-    // 1. Get the logged-in user
+    // 1. Get logged in user
     const { data: userResp, error: userErr } = await supabase.auth.getUser();
     if (userErr) throw userErr;
     const user = userResp.user;
     if (!user) throw new Error("You must be logged in to submit a travel product.");
 
-    // 2. Fetch org_name from business_profiles
+    // 2. Fetch org_name
     const { data: profile, error: profileErr } = await supabase
       .from("business_profiles")
       .select("org_name")
-      .eq("user_id", user.id)
+      .eq("id", user.id)
       .single();
-
     if (profileErr) throw profileErr;
     const orgName = profile?.org_name || null;
 
     // 3. Build product payload
     const productId = crypto.randomUUID();
-    const categoriesClean: any[] = [];
     let thumbnailUrl: string | null = null;
 
     if (form.thumbnail) {
@@ -224,18 +223,73 @@ const onSubmit = async () => {
       thumbnailUrl = uploaded;
     }
 
-    // === categories & itinerary cleaning code stays the same ===
+    // === Build categoriesClean ===
+    const categoriesClean = [];
+    for (const [catIdx, cat] of form.categories.entries()) {
+      const itineraryClean = [];
 
+      for (const [dayIdx, day] of cat.itinerary.entries()) {
+        // Process sites with image upload
+        const sitesClean = [];
+        for (const [stopIdx, stop] of day.sites.entries()) {
+          const siteImgs = stop.images?.length
+            ? await uploadManyToCloudinary(
+                stop.images,
+                `${user.id}/${productId}/cat-${catIdx + 1}/day-${dayIdx + 1}/stop-${stopIdx + 1}`
+              )
+            : [];
+          sitesClean.push({
+            name: stop.name,
+            stayHours: stop.stayHours,
+            images: siteImgs,
+          });
+        }
+
+        // Process meals with image upload
+        const foodClean: any = {};
+        for (const mealKey of ["breakfast", "lunch", "snacks", "dinner"] as const) {
+          const meal = day.food[mealKey];
+          const itemsClean = [];
+          for (const [itemIdx, item] of meal.items.entries()) {
+            const itemImgs = item.images?.length
+              ? await uploadManyToCloudinary(
+                  item.images,
+                  `${user.id}/${productId}/cat-${catIdx + 1}/day-${dayIdx + 1}/food-${mealKey}-${itemIdx + 1}`
+                )
+              : [];
+            itemsClean.push({ name: item.name, images: itemImgs });
+          }
+          foodClean[mealKey] = { items: itemsClean };
+        }
+
+        itineraryClean.push({
+          dayNumber: day.dayNumber,
+          sites: sitesClean,
+          food: foodClean,
+        });
+      }
+
+      categoriesClean.push({
+        categoryName: cat.categoryName,
+        days: cat.days,
+        nights: cat.nights,
+        travelMode: cat.travelMode,
+        pricing: cat.pricing,
+        itinerary: itineraryClean,
+      });
+    }
+
+    // Final payload
     const payload = {
       product_id: productId,
       user_id: user.id,
       package_name: form.packageName,
       thumbnail: thumbnailUrl,
-      categories: categoriesClean,
-      org_name: orgName, 
+      categories: categoriesClean,   // ✅ now filled
+      org_name: orgName,
     };
 
-    // 4. Save to your embed API (or directly supabase if you prefer)
+    // 4. Send to embed API
     const embedResp = await fetch("/api/embed", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -245,7 +299,7 @@ const onSubmit = async () => {
     const embedData = await embedResp.json();
     if (!embedResp.ok) throw new Error(embedData.error || "Failed to add product via embed API");
 
-    setMessage("Travel product saved successfully with org_name! ✅");
+    setMessage("Travel product saved successfully with categories & org_name ✅");
   } catch (e: any) {
     console.error(e);
     setMessage(`Error: ${e.message || "unknown error"}`);
@@ -253,6 +307,7 @@ const onSubmit = async () => {
     setBusy(false);
   }
 };
+
 
 
 

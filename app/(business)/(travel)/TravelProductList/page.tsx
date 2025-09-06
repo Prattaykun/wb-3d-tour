@@ -1,3 +1,5 @@
+// app/(business)/(travel)/TravelProductList/page.tsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -87,7 +89,7 @@ export default function TravelProductListPage() {
       <div className="relative mb-8 max-w-md">
         <Input
           type="text"
-          placeholder="🔍 Search packages..."
+          placeholder="Search packages..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10 pr-4 py-2 rounded-xl border focus:ring-2 focus:ring-primary/60 shadow-md"

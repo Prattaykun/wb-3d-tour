@@ -1,4 +1,4 @@
-// components/travel/TravelProductCard.tsx
+// components/travel/TravelProductCard1.tsx
 
 import { useState, useEffect } from "react";
 import { supabase } from "@/utils/supabase/server";
@@ -15,7 +15,7 @@ interface TravelProductCardProps {
   onDelete?: () => void;
 }
 
-export default function TravelProductCard({ productId, onDelete }: TravelProductCardProps) {
+export default function TravelProductCard1({ productId, onDelete }: TravelProductCardProps) {
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [showOverlay, setShowOverlay] = useState(false);
@@ -78,81 +78,7 @@ export default function TravelProductCard({ productId, onDelete }: TravelProduct
   }
 
   const canDelete = role === "business" || role === "admin";
-  const canBook = role === "consumer" || role === "admin";
-
-const handleBookNow = async () => {
-  if (!selectedCategory) {
-    alert("Please select a category first!");
-    return;
-  }
-
-  // Get logged in user
-  const {
-    data: { user },
-    error: userError,
-  } = await supabase.auth.getUser();
-
-  if (userError || !user) {
-    alert("You need to be logged in to book.");
-    return;
-  }
-
-  const bookingEntry = {
-    product_id: productId,
-    category: selectedCategory.categoryName,
-    pricing: {
-      inr: selectedCategory.pricing.inr,
-      btc: selectedCategory.pricing.btc,
-      eth: selectedCategory.pricing.eth,
-    },
-    booked_at: new Date().toISOString(),
-  };
-
-  // Step 1: check if row exists
-  const { data: profile, error: profileError } = await supabase
-    .from("consumer_profiles")
-    .select("booked_travels")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  let currentBookings = profile?.booked_travels || [];
-
-  // Step 2: If no row, insert one
-  if (!profile) {
-    const { error: insertError } = await supabase
-      .from("consumer_profiles")
-      .insert([
-        {
-          id: user.id, // FK to auth.users.id
-          booked_travels: [bookingEntry],
-        },
-      ]);
-
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      alert("Failed to create profile row.");
-      return;
-    }
-  } else {
-    // Step 3: update existing row
-    const { error: updateError } = await supabase
-      .from("consumer_profiles")
-      .update({
-        booked_travels: [...currentBookings, bookingEntry],
-      })
-      .eq("id", user.id);
-
-    if (updateError) {
-      console.error("Update error:", updateError);
-      alert("Booking failed, please try again.");
-      return;
-    }
-  }
-
-  alert("Package added to cart successfully!");
-  router.push("/TravelCheckout");
-  setShowOverlay(false);
-};
+//   const canBook = role === "consumer" || role === "admin";
 
 
   return (
@@ -343,15 +269,6 @@ const handleBookNow = async () => {
                   </div>
                 </div>
               ))}
-
-              {canBook && (
-                <Button
-                  onClick={handleBookNow}
-                  className="w-full py-3 text-lg mt-6 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800"
-                >
-                  Book This Package
-                </Button>
-              )}
             </div>
           </div>
         </div>

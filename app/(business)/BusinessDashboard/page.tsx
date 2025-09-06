@@ -176,6 +176,24 @@ export default function BusinessDashboard() {
               </div>
             </Card>
           </div>
+                    {/* Travel Products Section */}
+          {profile.business_types.includes("travel agency") && (
+            <div className="mt-10 rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-white p-8 shadow-md">
+              <h2 className="text-2xl font-bold text-purple-800 mb-3">
+                Travel Products
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Manage and showcase your travel packages directly from your dashboard.
+              </p>
+              <button
+                onClick={() => router.push("/TravelProductList")}
+                className="px-6 py-3 rounded-xl bg-purple-600 text-white font-medium shadow hover:bg-purple-700 transition"
+              >
+                Go to Travel Product List →
+              </button>
+            </div>
+          )}
+
         </div>
       </div>
     </div>

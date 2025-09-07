@@ -16,7 +16,7 @@ export default function Navbar() {
     setIsMobileMenuOpen(false);
   };
 
-  const scrollToTop = () => smoothScrollTo("top");
+  // const scrollToTop = () => smoothScrollTo("top");
 
   return (
     <nav
@@ -24,7 +24,7 @@ export default function Navbar() {
       className="flex justify-between items-center px-6 py-4 backdrop-blur-lg bg-white/20 border-b border-white/20 shadow-lg sticky top-0 z-50"
     >
       {/* Logo - click to scroll to top */}
-      <button onClick={scrollToTop} className="flex items-center gap-4 focus:outline-none">
+  <button onClick={() => router.push("/")} className="flex items-center gap-4 focus:outline-none">
         <div className="w-14 h-14 bg-gradient-to-tr from-indigo-500 via-purple-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-2xl ring-1 ring-white/30 overflow-hidden">
           <img src="/media/flight.png" alt="WB Tour Logo" className="w-full h-full object-cover" />
         </div>

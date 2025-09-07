@@ -1,10 +1,10 @@
 // app/MyTourPlan/page.tsx
 "use client"
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
 
-// Types
+// Types (unchanged)
 type Category = 'Heritage' | 'Temple' | 'Museum' | 'Nature' | 'Fort' | 'Beach' | 
   'Market' | 'Park' | 'Transport' | 'Wildlife' | 'National Park' | 'Village' | 
   'Town' | 'Viewpoint' | 'Cultural Site' | 'Pilgrimage' | 'Archaeological' | 
@@ -54,7 +54,7 @@ interface SavedPlace {
   city?: string;
 }
 
-// Initialize Supabase
+// Initialize Supabase (unchanged)
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -91,8 +91,11 @@ const MyTourPlan = () => {
     includeSavedPlaces: false
   });
 
-  // Form steps with questions - will be built dynamically
+  // Form steps with questions
   const [formSteps, setFormSteps] = useState<any[]>([]);
+  
+  // Ref for chat container to enable auto-scrolling
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   // Redirect to PlanTrip if agency tab is selected
   useEffect(() => {
@@ -220,7 +223,7 @@ const MyTourPlan = () => {
         max: 30
       },
       {
-        question: "And how many nights will you be staying?",
+        question: `You've selected ${formData.days} days. How many nights will you be staying? (Typically ${Math.max(1, formData.days - 1)} nights for ${formData.days} days)`,
         type: "number", 
         key: "nights",
         min: 1,
@@ -286,18 +289,25 @@ const MyTourPlan = () => {
     );
     
     setFormSteps(baseSteps);
-  }, [savedPlaces]);
+  }, [savedPlaces, formData.days]); // Added formData.days as dependency
 
-  // Initialize chat with first question
+  // Initialize chat with first question when formSteps is available
   useEffect(() => {
-    if (currentStep === 0 && chatMessages.length === 0 && formSteps.length > 0) {
+    if (formSteps.length > 0 && chatMessages.length === 0) {
       setChatMessages([{
         type: 'question',
         content: formSteps[0].question,
         step: 0
       }]);
     }
-  }, [currentStep, chatMessages.length, formSteps]);
+  }, [formSteps, chatMessages.length]);
+
+  // Auto-scroll to bottom when chat messages change
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
 const handleAnswer = (answer: any) => {
   if (formSteps.length === 0) return;
@@ -316,6 +326,18 @@ const handleAnswer = (answer: any) => {
     answer = customLocation;
   }
 
+  // Special handling for days - automatically set nights to days-1
+  let newFormData = { ...formData };
+  if (currentStepData.key === 'days') {
+    // Automatically set nights to days-1 (minimum 1 night)
+    const nights = Math.max(1, answer - 1);
+    newFormData = { ...formData, [currentStepData.key]: answer, nights };
+  } else {
+    newFormData = { ...formData, [currentStepData.key]: answer };
+  }
+  
+  setFormData(newFormData);
+
   // Special handling for additional requirements - don't set boolean value
   if (currentStep === formSteps.length - 1) {
     if (answer === true) {
@@ -323,16 +345,12 @@ const handleAnswer = (answer: any) => {
       return;
     } else {
       // If user selects "No" to additional requirements, submit with empty value
-      const newFormData = { ...formData, additionalRequirements: "None" };
-      setFormData(newFormData);
-      handleSubmitWithData(newFormData);
+      const finalFormData = { ...newFormData, additionalRequirements: "None" };
+      setFormData(finalFormData);
+      handleSubmitWithData(finalFormData);
       return;
     }
   }
-
-  // For all other steps, update form data normally
-  const newFormData = { ...formData, [currentStepData.key]: answer };
-  setFormData(newFormData);
 
   // Add answer to chat
   setChatMessages(prev => [
@@ -397,6 +415,17 @@ const handleAnswer = (answer: any) => {
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
     
+    // Update the nights question if we're moving to the nights step
+    if (nextStep === 2) { // Assuming nights is the third step (index 2)
+      // Update the form steps to reflect the correct number of nights suggestion
+      const updatedSteps = [...formSteps];
+      updatedSteps[2] = {
+        ...updatedSteps[2],
+        question: `You've selected ${newFormData.days} days. How many nights will you be staying? (Typically ${Math.max(1, newFormData.days - 1)} nights for ${newFormData.days} days)`
+      };
+      setFormSteps(updatedSteps);
+    }
+    
     // Add next question to chat
     setTimeout(() => {
       setChatMessages(prev => [
@@ -410,6 +439,8 @@ const handleAnswer = (answer: any) => {
     }, 300);
   }
 };
+
+// ... rest of the code remains unchanged
 
 const handleAdditionalRequirementsSubmit = () => {
   // Store the additional requirements in form data
@@ -667,15 +698,29 @@ const handleSubmit = async () => {
       case 'number':
         return (
           <div className="flex space-x-4">
-            {[3, 5, 7, 10].map(num => (
-              <button
-                key={num}
-                onClick={() => handleAnswer(num)}
-                className="flex-1 p-3 rounded-lg bg-teal-100 hover:bg-teal-200 transition-colors text-teal-800"
-              >
-                {num} {stepData.key === 'days' ? 'Days' : 'Nights'}
-              </button>
-            ))}
+            {stepData.key === 'days' ? (
+              // For days, show standard options
+              [3, 5, 7, 10].map(num => (
+                <button
+                  key={num}
+                  onClick={() => handleAnswer(num)}
+                  className="flex-1 p-3 rounded-lg bg-teal-100 hover:bg-teal-200 transition-colors text-teal-800"
+                >
+                  {num} Days
+                </button>
+              ))
+            ) : (
+              // For nights, show options based on selected days
+              [Math.max(1, formData.days - 1), formData.days, formData.days + 1].map(num => (
+                <button
+                  key={num}
+                  onClick={() => handleAnswer(num)}
+                  className="flex-1 p-3 rounded-lg bg-teal-100 hover:bg-teal-200 transition-colors text-teal-800"
+                >
+                  {num} Nights
+                </button>
+              ))
+            )}
           </div>
         );
       
@@ -983,7 +1028,10 @@ const handleSubmit = async () => {
             <p>Let's create your perfect West Bengal itinerary together</p>
           </div>
 
-          <div className="p-4 h-96 overflow-y-auto bg-gray-50">
+          <div 
+            ref={chatContainerRef}
+            className="p-4 h-96 overflow-y-auto bg-gray-50"
+          >
             <div className="space-y-4">
               {chatMessages.map((message, index) => (
                 <div

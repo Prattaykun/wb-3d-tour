@@ -1,3 +1,4 @@
+// app/MyTourPlan/page.tsx
 "use client"
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -25,6 +26,7 @@ interface TourPlanData {
   selectedEvents?: any[];
   additionalRequirements?: string;
   userId?: string;
+  includeSavedPlaces?: boolean;
 }
 
 interface Event {
@@ -46,6 +48,12 @@ interface ChatMessage {
   data?: any;
 }
 
+interface SavedPlace {
+  id: string;
+  name: string;
+  city?: string;
+}
+
 // Initialize Supabase
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,6 +64,7 @@ const MyTourPlan = () => {
   const [user, setUser] = useState<any>(null);
   const [activeTab, setActiveTab] = useState<string>('ai');
   const [events, setEvents] = useState<Event[]>([]);
+  const [savedPlaces, setSavedPlaces] = useState<SavedPlace[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [planResult, setPlanResult] = useState<string | null>(null);
   const router = useRouter();
@@ -67,6 +76,7 @@ const MyTourPlan = () => {
   const [showCustomLocationInput, setShowCustomLocationInput] = useState(false);
   const [additionalRequirements, setAdditionalRequirements] = useState('');
   const [showAdditionalRequirements, setShowAdditionalRequirements] = useState(false);
+  const [showSavedPlacesPreview, setShowSavedPlacesPreview] = useState(false);
   
   const [formData, setFormData] = useState<TourPlanData>({
     startingPoint: '',
@@ -77,79 +87,12 @@ const MyTourPlan = () => {
     categories: [],
     hotelPreference: 'Mid',
     interestedInEvents: false,
-    selectedEvents: []
+    selectedEvents: [],
+    includeSavedPlaces: false
   });
 
-  // Form steps with questions
-  const formSteps = [
-    {
-      question: "Welcome to West Bengal Tour Planner! 🌄 Where would you like to start your journey?",
-      type: "select",
-      options: [
-        "Netaji Subhas Chandra Bose International Airport, Kolkata",
-        "Bagdogra Airport, Siliguri", 
-        "Howrah Junction Railway Station",
-        "Sealdah Railway Station",
-        "Other location (please specify)"
-      ],
-      key: "startingPoint"
-    },
-    {
-      question: "Great choice! How many days will you be exploring beautiful West Bengal?",
-      type: "number",
-      key: "days",
-      min: 1,
-      max: 30
-    },
-    {
-      question: "And how many nights will you be staying?",
-      type: "number", 
-      key: "nights",
-      min: 1,
-      max: 30
-    },
-    {
-      question: "What's your total budget for this trip (in INR)?",
-      type: "slider",
-      key: "budget",
-      min: 5000,
-      max: 100000,
-      step: 5000
-    },
-    {
-      question: "What type of journey experience are you looking for?",
-      type: "button-group",
-      options: ['Relaxed', 'Adventurous', 'Cultural', 'Spiritual', 'Family', 'Solo'],
-      key: "journeyType"
-    },
-    {
-      question: "What interests you most about West Bengal? (Select all that apply)",
-      type: "multi-select",
-      options: [
-        'Heritage', 'Temple', 'Museum', 'Nature', 'Fort', 'Beach', 
-        'Market', 'Park', 'Wildlife', 'National Park', 'Village', 
-        'Town', 'Viewpoint', 'Cultural Site', 'Pilgrimage', 
-        'Archaeological', 'Hillstation', 'Lake', 'Shopping'
-      ],
-      key: "categories"
-    },
-    {
-      question: "What type of accommodation do you prefer?",
-      type: "button-group",
-      options: ['Budget', 'Mid', 'Premium', 'Luxury', 'Heritage Property'],
-      key: "hotelPreference"
-    },
-    {
-      question: "Would you like to include any upcoming events in your itinerary?",
-      type: "events",
-      key: "interestedInEvents"
-    },
-    {
-      question: "Do you have any additional requirements or preferences for your itinerary?",
-      type: "additional-requirements",
-      key: "additionalRequirements"
-    }
-  ];
+  // Form steps with questions - will be built dynamically
+  const [formSteps, setFormSteps] = useState<any[]>([]);
 
   // Redirect to PlanTrip if agency tab is selected
   useEffect(() => {
@@ -158,7 +101,7 @@ const MyTourPlan = () => {
     }
   }, [activeTab, router]);
 
-  // Fetch user and events on component mount
+  // Fetch user, events, and saved places on component mount
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -166,6 +109,19 @@ const MyTourPlan = () => {
         const { data: { user }, error: userError } = await supabase.auth.getUser();
         if (!userError && user) {
           setUser(user);
+          
+          // Fetch user's saved places
+          const { data: profileData, error: profileError } = await supabase
+            .from('consumer_profiles')
+            .select('visit_places')
+            .eq('id', user.id)
+            .maybeSingle();
+            
+          if (!profileError && profileData && profileData.visit_places) {
+            // Filter out null values and ensure we have an array of SavedPlace
+            const validPlaces = profileData.visit_places.filter((place: any) => place !== null) as SavedPlace[];
+            setSavedPlaces(validPlaces);
+          }
         }
         
         // Fetch upcoming events
@@ -187,18 +143,165 @@ const MyTourPlan = () => {
     fetchData();
   }, []);
 
+  // Form step type definition
+  type FormStep =
+    | {
+        question: string;
+        type: "select";
+        options: string[];
+        key: string;
+      }
+    | {
+        question: string;
+        type: "number";
+        key: string;
+        min: number;
+        max: number;
+      }
+    | {
+        question: string;
+        type: "slider";
+        key: string;
+        min: number;
+        max: number;
+        step: number;
+      }
+    | {
+        question: string;
+        type: "button-group";
+        options: string[];
+        key: string;
+      }
+    | {
+        question: string;
+        type: "multi-select";
+        options: string[];
+        key: string;
+      }
+    | {
+        question: string;
+        type: "saved-places";
+        key: string;
+        places: SavedPlace[];
+      }
+    | {
+        question: string;
+        type: "events";
+        key: string;
+        options: string[];
+      }
+    | {
+        question: string;
+        type: "additional-requirements";
+        key: string;
+        options: string[];
+      };
+
+  // Build form steps dynamically based on whether user has saved places
+  useEffect(() => {
+    const baseSteps: FormStep[] = [
+      {
+        question: "Welcome to West Bengal Tour Planner! 🌄 Where would you like to start your journey?",
+        type: "select",
+        options: [
+          "Netaji Subhas Chandra Bose International Airport, Kolkata",
+          "Bagdogra Airport, Siliguri", 
+          "Howrah Junction Railway Station",
+          "Sealdah Railway Station",
+          "Other location (please specify)"
+        ],
+        key: "startingPoint"
+      },
+      {
+        question: "Great choice! How many days will you be exploring beautiful West Bengal?",
+        type: "number",
+        key: "days",
+        min: 1,
+        max: 30
+      },
+      {
+        question: "And how many nights will you be staying?",
+        type: "number", 
+        key: "nights",
+        min: 1,
+        max: 30
+      },
+      {
+        question: "What's your total budget for this trip (in INR)?",
+        type: "slider",
+        key: "budget",
+        min: 5000,
+        max: 100000,
+        step: 5000
+      },
+      {
+        question: "What type of journey experience are you looking for?",
+        type: "button-group",
+        options: ['Relaxed', 'Adventurous', 'Cultural', 'Spiritual', 'Family', 'Solo'],
+        key: "journeyType"
+      },
+      {
+        question: "What interests you most about West Bengal? (Select all that apply)",
+        type: "multi-select",
+        options: [
+          'Heritage', 'Temple', 'Museum', 'Nature', 'Fort', 'Beach', 
+          'Market', 'Park', 'Wildlife', 'National Park', 'Village', 
+          'Town', 'Viewpoint', 'Cultural Site', 'Pilgrimage', 
+          'Archaeological', 'Hillstation', 'Lake', 'Shopping'
+        ],
+        key: "categories"
+      },
+      {
+        question: "What type of accommodation do you prefer?",
+        type: "button-group",
+        options: ['Budget', 'Mid', 'Premium', 'Luxury', 'Heritage Property'],
+        key: "hotelPreference"
+      }
+    ];
+    
+    // Add saved places question if user has saved places
+    if (savedPlaces.length > 0) {
+      baseSteps.push({
+        question: "I see you have some places saved in your tour plan. Would you like to include these in your itinerary?",
+        type: "saved-places",
+        key: "includeSavedPlaces",
+        places: savedPlaces
+      });
+    }
+    
+    // Add events and additional requirements questions
+    baseSteps.push(
+      {
+        question: "Would you like to include any upcoming events in your itinerary?",
+        type: "events",
+        key: "interestedInEvents",
+        options: ["Yes", "No"]
+      },
+      {
+        question: "Do you have any additional requirements or preferences for your itinerary?",
+        type: "additional-requirements",
+        key: "additionalRequirements",
+        options: ["Yes", "No"]
+      }
+    );
+    
+    setFormSteps(baseSteps);
+  }, [savedPlaces]);
+
   // Initialize chat with first question
   useEffect(() => {
-    if (currentStep === 0 && chatMessages.length === 0) {
+    if (currentStep === 0 && chatMessages.length === 0 && formSteps.length > 0) {
       setChatMessages([{
         type: 'question',
         content: formSteps[0].question,
         step: 0
       }]);
     }
-  }, [currentStep, chatMessages.length]);
+  }, [currentStep, chatMessages.length, formSteps]);
 
 const handleAnswer = (answer: any) => {
+  if (formSteps.length === 0) return;
+  
   const currentStepData = formSteps[currentStep];
   
   // Handle custom location selection
@@ -243,8 +346,33 @@ const handleAnswer = (answer: any) => {
     }
   ]);
 
+  // Special handling for saved places question
+  if (currentStepData.key === 'includeSavedPlaces') {
+    if (answer === true) {
+      setShowSavedPlacesPreview(true);
+      return;
+    } else {
+      // If user selects "No", move to next step
+      const nextStep = currentStep + 1;
+      setCurrentStep(nextStep);
+      
+      // Add next question to chat
+      setTimeout(() => {
+        setChatMessages(prev => [
+          ...prev,
+          {
+            type: 'question',
+            content: formSteps[nextStep].question,
+            step: nextStep
+          }
+        ]);
+      }, 300);
+      return;
+    }
+  }
+
   // Special handling for events question
-  if (currentStep === formSteps.length - 2 && answer === true && events.length > 0) {
+  if (currentStepData.key === 'interestedInEvents' && answer === true && events.length > 0) {
     setShowEventSelection(true);
     // Add event selection question to chat
     setChatMessages(prev => [
@@ -351,15 +479,54 @@ const handleEventSelection = (selectedEvents: Event[]) => {
   }, 300);
 };
 
+const handleSavedPlacesConfirmation = (include: boolean) => {
+  setFormData(prev => ({ ...prev, includeSavedPlaces: include }));
+  
+  // Add answer to chat
+  setChatMessages(prev => [
+    ...prev,
+    {
+      type: 'answer',
+      content: include ? "Yes, include my saved places" : "No, don't include saved places",
+      step: currentStep
+    }
+  ]);
+  
+  // Close the saved places preview
+  setShowSavedPlacesPreview(false);
+  
+  // Move to next step
+  const nextStep = currentStep + 1;
+  setCurrentStep(nextStep);
+  
+  // Add next question to chat
+  setTimeout(() => {
+    setChatMessages(prev => [
+      ...prev,
+      {
+        type: 'question',
+        content: formSteps[nextStep].question,
+        step: nextStep
+      }
+    ]);
+  }, 300);
+};
+
 const handleSubmitWithData = async (submissionData: TourPlanData) => {
   setIsLoading(true);
   setError(null);
   
   try {
+    // Include saved places in the data if user opted in
+    const finalData = {
+      ...submissionData,
+      savedPlaces: submissionData.includeSavedPlaces ? savedPlaces : []
+    };
+
     // Save plan to database with user ID if available
     const planData = {
       user_id: user?.id || null,
-      plan_data: submissionData,
+      plan_data: finalData,
       created_at: new Date().toISOString()
     };
 
@@ -378,11 +545,7 @@ const handleSubmitWithData = async (submissionData: TourPlanData) => {
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        ...submissionData,
-        events: submissionData.interestedInEvents ? submissionData.selectedEvents || [] : [],
-        additionalRequirements: submissionData.additionalRequirements || "None"
-      }),
+      body: JSON.stringify(finalData),
     });
 
     const result = await response.json();
@@ -406,7 +569,19 @@ const handleSubmit = async () => {
 };
 
   const renderInput = (step: number) => {
+    if (formSteps.length === 0) return null;
+    
     const stepData = formSteps[step];
+    
+    // Show saved places preview if needed
+    if (showSavedPlacesPreview) {
+      return (
+        <SavedPlacesPreview 
+          places={savedPlaces}
+          onConfirm={(include) => handleSavedPlacesConfirmation(include)}
+        />
+      );
+    }
     
     // Show event selection in chat instead of input area
     if (showEventSelection) {
@@ -477,7 +652,7 @@ const handleSubmit = async () => {
       case 'select':
         return (
           <div className="space-y-2">
-            {stepData.options?.map((option, index) => (
+            {stepData.options?.map((option: string, index: number) => (
               <button
                 key={index}
                 onClick={() => handleAnswer(option)}
@@ -533,7 +708,7 @@ const handleSubmit = async () => {
       case 'button-group':
         return (
           <div className="grid grid-cols-2 gap-2">
-            {stepData.options?.map((option, index) => (
+            {stepData.options?.map((option: string, index: number) => (
               <button
                 key={index}
                 onClick={() => handleAnswer(option)}
@@ -553,7 +728,7 @@ const handleSubmit = async () => {
         return (
           <div className="space-y-2">
             <div className="grid grid-cols-2 gap-2">
-              {stepData.options?.map((category, index) => (
+              {stepData.options?.map((category: string, index: number) => (
                 <button
                   key={index}
                   onClick={() => {
@@ -577,6 +752,24 @@ const handleSubmit = async () => {
               className="w-full p-3 mt-4 rounded-lg bg-green-600 text-white hover:bg-green-700 transition-colors"
             >
               Confirm Interests
+            </button>
+          </div>
+        );
+      
+      case 'saved-places':
+        return (
+          <div className="flex space-x-2">
+            <button
+              onClick={() => handleAnswer(true)}
+              className="flex-1 p-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+            >
+              Yes, include them
+            </button>
+            <button
+              onClick={() => handleAnswer(false)}
+              className="flex-1 p-3 rounded-lg bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors"
+            >
+              No, create new plan
             </button>
           </div>
         );
@@ -620,6 +813,43 @@ const handleSubmit = async () => {
       default:
         return null;
     }
+  };
+
+  // Saved places preview component
+  const SavedPlacesPreview = ({ places, onConfirm }: { 
+    places: SavedPlace[], 
+    onConfirm: (include: boolean) => void 
+  }) => {
+    return (
+      <div className="space-y-4">
+        <div className="bg-blue-50 p-4 rounded-lg">
+          <h3 className="font-semibold text-blue-800 mb-2">Your Saved Places:</h3>
+          <div className="space-y-2 max-h-40 overflow-y-auto">
+            {places.map((place, index) => (
+              <div key={index} className="p-2 bg-white rounded border">
+                <h4 className="font-medium">{place.name}</h4>
+                {place.city && <p className="text-sm text-gray-600">{place.city}</p>}
+              </div>
+            ))}
+          </div>
+        </div>
+        <p className="text-gray-700">Would you like to include these places in your travel plan?</p>
+        <div className="flex space-x-2">
+          <button
+            onClick={() => onConfirm(true)}
+            className="flex-1 p-3 rounded-lg bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+          >
+            Yes, include them
+          </button>
+          <button
+            onClick={() => onConfirm(false)}
+            className="flex-1 p-3 rounded-lg bg-gray-300 text-gray-700 hover:bg-gray-400 transition-colors"
+          >
+            No, create new plan
+          </button>
+        </div>
+      </div>
+    );
   };
 
   // Event selection component that appears in the chat
@@ -787,7 +1017,7 @@ const handleSubmit = async () => {
           </div>
 
           <div className="p-4 bg-white border-t">
-            {renderInput(currentStep)}
+            {formSteps.length > 0 && renderInput(currentStep)}
           </div>
 
           {error && (

@@ -4,7 +4,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { Input } from "@/components/ui/input";
-import TravelProductCard from "@/components/travel/TravelProductCard";
+import TravelProductCard from "@/components/travel/TravelProductCard2";
 import { motion, AnimatePresence } from "framer-motion";
 import debounce from "lodash.debounce";
 

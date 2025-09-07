@@ -1,3 +1,5 @@
+//app/wbmap/page.tsx
+
 'use client';
 import maplibregl, { Map, Marker, Popup, LngLatBounds } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';

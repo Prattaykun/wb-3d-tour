@@ -9,14 +9,14 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const pathname = usePathname();
   return (
     <>
-      {pathname !== "/map" && <Navbar />}
-      {pathname !== "/map" && <Menu />}
-     
+      {pathname !== "/map" && pathname !== "/MyTourPlan" && <Navbar />}
+      {pathname !== "/map" && pathname !== "/MyTourPlan" && <Menu />}
+
       {children}
-      
-      {pathname !== "/map" && <BottomNav />}
-      
-      {pathname !== "/map" && <Footer />}
+
+      {pathname !== "/map" && pathname !== "/MyTourPlan" && <BottomNav />}
+
+      {pathname !== "/map" && pathname !== "/MyTourPlan" && <Footer />}
     </>
   );
 }

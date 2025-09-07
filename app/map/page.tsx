@@ -1,12 +1,17 @@
+// app/map/page.tsx
 'use client';
 import maplibregl, { Map, Marker, Popup, LngLatBounds } from 'maplibre-gl';
 import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
 import { PlaceCategory } from '../../shared/types';
-import { supabase } from '../../utils/supabase/server';
+import { createClient } from '@supabase/supabase-js';
 
-const MAP_STYLE =
- `https://api.maptiler.com/maps/${process.env.NEXT_PUBLIC_MAPTILER_STYLE}/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`;
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
+
+const MAP_STYLE = `https://api.maptiler.com/maps/${process.env.NEXT_PUBLIC_MAPTILER_STYLE}/style.json?key=${process.env.NEXT_PUBLIC_MAPTILER_KEY}`;
 const WEST_BENGAL_BOUNDS: [number, number, number, number] = [
   85.75, 20.8, 90.8, 27.5
 ];
@@ -57,6 +62,12 @@ interface HotelSpec {
   rating?: number;
 }
 
+interface TourPlanPlace {
+  id: string;
+  name: string;
+  city?: string;
+}
+
 export default function WBMap() {
   const mapRef = useRef<Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -66,11 +77,78 @@ export default function WBMap() {
   const [distanceSetting, setDistanceSetting] = useState<number>(2);
   const [tourMode, setTourMode] = useState(true);
   const [tourPaused, setTourPaused] = useState(false);
+  const [showTourPlan, setShowTourPlan] = useState(false);
+  const [tourPlan, setTourPlan] = useState<TourPlanPlace[]>([]);
+  const [user, setUser] = useState<any>(null);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
+  const [isNative, setIsNative] = useState(false);
   const visitedRef = useRef<Set<string>>(new Set());
 
   const hotelMarkersRef = useRef<Marker[]>([]);
   const markersRef = useRef<Record<string, Marker>>({});
   const lastActiveMarkerRef = useRef<Marker | null>(null);
+
+  // Check if user is on a native platform
+  useEffect(() => {
+    // Simple check for native platforms (can be enhanced based on your needs)
+    const userAgent = navigator.userAgent || navigator.vendor;
+    setIsNative(
+      /android|iphone|ipad|ipod|windows phone|mobile/i.test(userAgent)
+    );
+  }, []);
+
+  // Check if user is logged in
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    checkUser();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // Fetch user's tour plan from visit_places column
+  useEffect(() => {
+    const fetchTourPlan = async () => {
+      if (!user) {
+        setTourPlan([]);
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from('consumer_profiles')
+          .select('visit_places')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching tour plan:', error);
+          return;
+        }
+
+        if (data?.visit_places) {
+          // Filter out null values and ensure we have an array of TourPlanPlace
+          const validPlaces = data.visit_places.filter((place: any) => place !== null) as TourPlanPlace[];
+          setTourPlan(validPlaces);
+        } else {
+          setTourPlan([]);
+        }
+      } catch (error) {
+        console.error('Error fetching tour plan:', error);
+      }
+    };
+
+    fetchTourPlan();
+  }, [user]);
 
   const haversine = (lat1: number, lon1: number, lat2: number, lon2: number) => {
     const toRad = (x: number) => (x * Math.PI) / 180;
@@ -238,6 +316,76 @@ export default function WBMap() {
     return () => clearTimeout(timeout);
   }, [tourMode, tourPaused, activeId, places]);
 
+  // Add place to tour plan (using visit_places column)
+  const addToTourPlan = async (place: PlaceSpec) => {
+    if (!user) {
+      setShowLoginPrompt(true);
+      return;
+    }
+
+    try {
+      // Check if place already exists in tour plan
+      if (tourPlan.some(p => p.id === place.id)) {
+        return; // Place already in tour plan
+      }
+
+      const newPlace: TourPlanPlace = {
+        id: place.id,
+        name: place.name,
+        city: place.city
+      };
+
+      const updatedTourPlan = [...tourPlan, newPlace];
+      
+      // Update the database using visit_places column
+      const { error } = await supabase
+        .from('consumer_profiles')
+        .upsert({
+          id: user.id,
+          visit_places: updatedTourPlan,
+          updated_at: new Date().toISOString()
+        },
+        { onConflict: "id" }
+      );
+
+      if (error) {
+        console.error('Error updating tour plan:', error);
+        return;
+      }
+
+      setTourPlan(updatedTourPlan);
+    } catch (error) {
+      console.error('Error adding to tour plan:', error);
+    }
+  };
+
+  // Remove place from tour plan (using visit_places column)
+  const removeFromTourPlan = async (placeId: string) => {
+    if (!user) return;
+
+    try {
+      const updatedTourPlan = tourPlan.filter(p => p.id !== placeId);
+      
+      // Update the database using visit_places column
+      const { error } = await supabase
+        .from('consumer_profiles')
+        .upsert({
+          id: user.id,
+          visit_places: updatedTourPlan,
+          updated_at: new Date().toISOString()
+        });
+
+      if (error) {
+        console.error('Error updating tour plan:', error);
+        return;
+      }
+
+      setTourPlan(updatedTourPlan);
+    } catch (error) {
+      console.error('Error removing from tour plan:', error);
+    }
+  };
+
   const activePlace = places.find((p) => p.id === activeId);
   const hotelsWithinRadius = hotels.filter((h) => {
     if (!activePlace) return false;
@@ -246,6 +394,72 @@ export default function WBMap() {
 
   return (
     <div className="flex flex-col w-full h-[100vh] relative">
+      {/* Login Prompt Modal */}
+      {showLoginPrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg max-w-md w-full">
+            <h3 className="text-lg font-semibold mb-4">Login Required</h3>
+            <p className="mb-4">You need to be logged in to add places to your tour plan.</p>
+            <div className="flex justify-end space-x-3">
+              <button 
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowLoginPrompt(false)}
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-blue-500 text-white rounded"
+                onClick={() => window.location.href = '/auth/login'}
+              >
+                Go to Login
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tour Plan Dropdown - Centered on native devices */}
+      {showTourPlan && (
+        <div className={`absolute ${isNative ? 'inset-4 m-auto h-fit max-h-[80vh]' : 'top-16 right-4'} bg-white shadow-lg rounded-lg p-4 z-30 max-w-md w-full max-h-96 overflow-y-auto`}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Your Tour Plan</h3>
+            <button 
+              onClick={() => setShowTourPlan(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+          {tourPlan.length === 0 ? (
+            <p className="text-gray-500">No places in your tour plan yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {tourPlan.map((place) => (
+                <div key={place.id} className="flex justify-between items-start p-3 border rounded">
+                  <div>
+                    <h4 className="font-medium">{place.name}</h4>
+                    {place.city && <p className="text-sm text-gray-600">{place.city}</p>}
+                  </div>
+                  <button 
+                    onClick={() => removeFromTourPlan(place.id)}
+                    className="text-red-500 hover:text-red-700"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+              {/* Build Plan with AI Button */}
+              <button
+                onClick={() => window.location.href = '/MyTourPlan'}
+                className="w-full mt-4 p-3 rounded-lg bg-purple-600 text-white font-semibold hover:bg-purple-700 transition-colors"
+              >
+                Build Plan with AI
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Controls */}
       <div className="absolute top-4 left-4 bg-black p-2 rounded-md shadow z-10 flex flex-wrap gap-2 items-center">
         <label className="text-xs text-gray-400">Radius:</label>
@@ -272,21 +486,34 @@ export default function WBMap() {
         )}
       </div>
 
+      {/* Tour Plan Button - Position based on device type */}
+      <div className={`absolute top-4 z-10 ${isNative ? 'right-4' : 'left-1/2 transform -translate-x-1/2'}`}>
+        <button 
+          onClick={() => setShowTourPlan(!showTourPlan)}
+          className="bg-black text-white px-4 py-2 rounded-md shadow flex items-center gap-2"
+        >
+          {isNative ? (
+            <img src="/media/icons/ai.png" width={24} height={24} alt="AI Tour Plan" />
+          ) : (
+            <>
+              <img src="/media/icons/ai.png" width={20} height={20} alt="AI" className="mr-1" />
+              <span>Your Tour Plan</span>
+              {tourPlan.length > 0 && (
+                <span className="bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
+                  {tourPlan.length}
+                </span>
+              )}
+            </>
+          )}
+        </button>
+      </div>
+
       {/* Map */}
       <div ref={containerRef} className="flex-grow w-full h-full" />
 
       {/* Info Panel */}
       {activePlace && (
-  <div
-    className="
-      absolute 
-      lg:right-0 lg:top-0 
-      lg:h-full lg:w-[360px] 
-      w-full h-[44%] bottom-0 
-      bg-black shadow-lg p-4 overflow-y-auto z-20
-      rounded-t-2xl
-    "
-  >
+        <div className="absolute lg:right-0 lg:top-0 lg:h-full lg:w-[360px] w-full h-[44%] bottom-0 bg-black shadow-lg p-4 overflow-y-auto z-20 rounded-t-2xl">
           <button
             className="text-xs text-red-500 absolute right-4 top-4"
             onClick={() => setActiveId(null)}
@@ -298,6 +525,15 @@ export default function WBMap() {
           <p className="text-xs text-gray-400 mb-2">
             {activePlace.city} • {activePlace.category}
           </p>
+          
+          {/* Add to Tour Plan Button */}
+          <button
+            onClick={() => addToTourPlan(activePlace)}
+            className="mt-2 bg-blue-500 text-white px-3 py-1 rounded text-sm"
+          >
+            Add to Tour Plan
+          </button>
+
           {activePlace.images && activePlace.images.length > 0 && (
             <div className="mt-4 flex flex-wrap gap-2">
               {activePlace.images.map((imgSrc: string, idx: number) => (
@@ -342,6 +578,23 @@ export default function WBMap() {
                   {h.rating && (
                     <div className="text-xs text-gray-400">Rating: {h.rating}★</div>
                   )}
+                  {/* Add to Tour Plan Button for Hotels */}
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      addToTourPlan({
+                        id: h.id,
+                        name: h.name,
+                        category: 'Hotel' as PlaceCategory,
+                        lat: h.lat,
+                        lon: h.lon
+                      });
+                    }}
+                    className="mt-1 bg-blue-500 text-white px-2 py-1 rounded text-xs self-start"
+                  >
+                    Add to Tour Plan
+                  </button>
                 </a>
               ))}
             </ul>

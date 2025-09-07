@@ -124,7 +124,10 @@ export default function MenuToggle() {
 
               {/* Consumer only */}
               {profile?.role === "consumer" && (
-                <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+                <button
+                  className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700"
+                  onClick={() => window.location.href = "/MyTourPlan"}
+                >
                   <span className="text-sm">My Tour Plans</span>
                   <Map size={18} className="text-green-500" />
                 </button>

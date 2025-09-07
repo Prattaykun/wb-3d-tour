@@ -117,7 +117,7 @@ export default function Home() {
             <h2 className="text-4xl font-bold mb-6">Ready to Explore West Bengal?</h2>
             <p className="text-xl mb-8 opacity-90">Discover centuries of rich heritage, vibrant culture, and unforgettable experiences</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link href="/PlanTrip" className="bg-white text-indigo-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 inline-flex items-center justify-center">
+              <Link href="/MyTourPlan" className="bg-white text-indigo-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105 inline-flex items-center justify-center">
                 Plan Your Trip <ArrowRight className="w-5 h-5 ml-2" />
               </Link>
               <Link href="/Heritage" className="border-2 border-white text-white px-8 py-4 rounded-full font-semibold hover:bg-white hover:text-indigo-600 transition-all transform hover:scale-105 inline-flex items-center justify-center">

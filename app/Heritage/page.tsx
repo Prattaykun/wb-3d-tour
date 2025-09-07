@@ -201,7 +201,7 @@ export default function Heritage() {
           
           <button
            
-          className="bg-white text-indigo-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105"onClick={() => router.push("/tourselect")} >
+          className="bg-white text-indigo-600 px-8 py-4 rounded-full font-semibold hover:bg-gray-100 transition-all transform hover:scale-105" onClick={() => router.push("/MyTourPlan")} >
             Get Personalized Itinerary
           </button>
         </div>

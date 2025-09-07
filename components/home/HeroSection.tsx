@@ -50,7 +50,7 @@ export default function HeroSection({ heroImages, currentImageIndex }: HeroSecti
 
           <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
             <Link
-              href="/PlanTrip"
+              href="/MyTourPlan"
               className="group bg-indigo-600 px-8 py-3 rounded-full font-semibold text-white hover:bg-purple-600 transition-all transform hover:scale-105 shadow-xl inline-flex items-center text-lg"
             >
               Plan Your Journey

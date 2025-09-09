@@ -1,9 +1,10 @@
+// app/BusinessDashboard/page.tsx
 "use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { Mail, Phone, Briefcase, Link as LinkIcon, Pencil } from "lucide-react";
+import { Mail, Phone, Briefcase, Link as LinkIcon, Pencil, Image as ImageIcon } from "lucide-react";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -18,12 +19,15 @@ type BusinessProfile = {
   business_types: string[];
   links: string[];
   images: string[];
+  created_at: string;
+  updated_at: string;
 };
 
 export default function BusinessDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<BusinessProfile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -43,7 +47,21 @@ export default function BusinessDashboard() {
         .single();
 
       if (!error && data) {
-        setProfile(data as BusinessProfile);
+        // Handle the images field properly
+        let images = [];
+        if (Array.isArray(data.images)) {
+          images = data.images;
+        } else if (typeof data.images === 'string') {
+          try {
+            // Try to parse if it's a JSON string
+            images = JSON.parse(data.images);
+          } catch (e) {
+            console.error("Error parsing images:", e);
+            images = [];
+          }
+        }
+        
+        setProfile({ ...data, images } as BusinessProfile);
       }
       setLoading(false);
     };
@@ -60,6 +78,10 @@ export default function BusinessDashboard() {
     }
   };
 
+  const handleImageError = () => {
+    setImageError(true);
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen items-center justify-center text-gray-500">
@@ -71,7 +93,13 @@ export default function BusinessDashboard() {
   if (!profile) {
     return (
       <div className="flex h-screen items-center justify-center text-gray-500">
-        No business profile found.
+        No business profile found. <br />
+        <button 
+          onClick={() => router.push("/BusinessForm")}
+          className="mt-4 px-4 py-2 bg-purple-600 text-white rounded-lg"
+        >
+          Create Profile
+        </button>
       </div>
     );
   }
@@ -82,11 +110,18 @@ export default function BusinessDashboard() {
         {/* Header with profile image */}
         <div className="relative h-48 bg-gradient-to-r from-purple-600 to-pink-500">
           <div className="absolute -bottom-16 left-8">
-            <img
-              src={profile.images?.[0] || "/media/icons/business.png"}
-              alt="Profile"
-              className="h-32 w-32 rounded-2xl border-4 border-white shadow-lg object-cover"
-            />
+            {profile.images && profile.images.length > 0 && profile.images[0] ? (
+              <img
+                src={profile.images[0]}
+                alt="Profile"
+                className="h-32 w-32 rounded-2xl border-4 border-white shadow-lg object-cover"
+                onError={handleImageError}
+              />
+            ) : (
+              <div className="h-32 w-32 rounded-2xl border-4 border-white shadow-lg bg-gray-200 flex items-center justify-center">
+                <ImageIcon size={48} className="text-gray-400" />
+              </div>
+            )}
           </div>
 
           {/* ✏️ Edit Button */}
@@ -140,7 +175,7 @@ export default function BusinessDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Business Types</p>
                 <div className="mt-1 flex flex-wrap gap-2">
-                  {profile.business_types.map((t, i) => (
+                  {profile.business_types && profile.business_types.map((t, i) => (
                     <span
                       key={i}
                       className="rounded-full bg-purple-100 text-purple-800 px-3 py-1 text-sm font-medium"
@@ -160,7 +195,7 @@ export default function BusinessDashboard() {
               <div>
                 <p className="text-sm text-gray-500">Links</p>
                 <ul className="mt-2 space-y-2">
-                  {profile.links.map((l, i) => (
+                  {profile.links && profile.links.map((l, i) => (
                     <li key={i}>
                       <a
                         href={l}
@@ -175,9 +210,44 @@ export default function BusinessDashboard() {
                 </ul>
               </div>
             </Card>
+
+            {/* Images
+            {profile.images && profile.images.length > 0 && (
+              <Card className="sm:col-span-2">
+                <CardIcon>
+                  <ImageIcon className="text-green-600" size={20} />
+                </CardIcon>
+                <div>
+                  <p className="text-sm text-gray-500">Uploaded Images</p>
+                  <div className="mt-2 grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {profile.images.map((img, i) => (
+                      <div key={i} className="relative group">
+                        <img
+                          src={img}
+                          alt={`Business image ${i + 1}`}
+                          className="w-full h-32 object-cover rounded-lg"
+                          onError={handleImageError}
+                        />
+                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-opacity rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
+                          <a 
+                            href={img} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-white text-sm bg-black bg-opacity-50 px-2 py-1 rounded"
+                          >
+                            View Full
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )} */}
           </div>
-                    {/* Travel Products Section */}
-          {profile.business_types.includes("travel agency") && (
+          
+          {/* Travel Products Section */}
+          {profile.business_types && profile.business_types.includes("travel agency") && (
             <div className="mt-10 rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-white p-8 shadow-md">
               <h2 className="text-2xl font-bold text-purple-800 mb-3">
                 Travel Products
@@ -190,6 +260,38 @@ export default function BusinessDashboard() {
                 className="px-6 py-3 rounded-xl bg-purple-600 text-white font-medium shadow hover:bg-purple-700 transition"
               >
                 Go to Travel Product List →
+              </button>
+            </div>
+          )}
+          {profile.business_types && profile.business_types.includes("travel agency") && (
+            <div className="mt-10 rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-white p-8 shadow-md">
+              <h2 className="text-2xl font-bold text-purple-800 mb-3">
+                Travel Customers
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Manage your travel customers and their bookings.
+              </p>
+              <button
+                onClick={() => router.push("/TravelCustomers")}
+                className="px-6 py-3 rounded-xl bg-purple-600 text-white font-medium shadow hover:bg-purple-700 transition"
+              >
+                Go to Travel Customer List →
+              </button>
+            </div>
+          )}
+          {profile.business_types && profile.business_types.includes("artisan") && (
+            <div className="mt-10 rounded-3xl border border-purple-200 bg-gradient-to-r from-purple-50 via-pink-50 to-white p-8 shadow-md">
+              <h2 className="text-2xl font-bold text-purple-800 mb-3">
+                Artisan Products
+              </h2>
+              <p className="text-gray-600 mb-6">
+                Manage and showcase Artifacts and Shops directly on our Tour platform.
+              </p>
+              <button
+                onClick={() => router.push("/ArtifactProductList")}
+                className="px-6 py-3 rounded-xl bg-purple-600 text-white font-medium shadow hover:bg-purple-700 transition"
+              >
+                Go to Artifact Product List →
               </button>
             </div>
           )}

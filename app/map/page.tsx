@@ -5,6 +5,10 @@ import 'maplibre-gl/dist/maplibre-gl.css';
 import { useEffect, useRef, useState } from 'react';
 import { PlaceCategory } from '../../shared/types';
 import { createClient } from '@supabase/supabase-js';
+import { useMemo } from 'react';
+import ArtifactsNearby from '@/components/Artifacts/ArtifactsNearby';
+
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -67,7 +71,15 @@ interface TourPlanPlace {
   name: string;
   city?: string;
 }
-
+interface ArtisanData {
+  artisan_id: string;
+  full_name: string;
+  email: string;
+  phone: string;
+  products: any[];
+  created_at: string;
+  updated_at: string;
+}
 export default function WBMap() {
   const mapRef = useRef<Map | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -83,12 +95,29 @@ export default function WBMap() {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [isNative, setIsNative] = useState(false);
   const visitedRef = useRef<Set<string>>(new Set());
-
+  const [artisans, setArtisans] = useState<ArtisanData[]>([]);
   const hotelMarkersRef = useRef<Marker[]>([]);
   const markersRef = useRef<Record<string, Marker>>({});
   const lastActiveMarkerRef = useRef<Marker | null>(null);
-
+   const [expandedDescriptions, setExpandedDescriptions] = useState<Set<string>>(new Set());
   // Check if user is on a native platform
+  // Move these functions to the main component body
+  const toggleDescription = (placeId: string) => {
+    const newExpanded = new Set(expandedDescriptions);
+    if (newExpanded.has(placeId)) {
+      newExpanded.delete(placeId);
+    } else {
+      newExpanded.add(placeId);
+    }
+    setExpandedDescriptions(newExpanded);
+  };
+
+  // Helper function to truncate text
+  const truncateWords = (text: string, maxWords: number) => {
+    const words = text.split(' ');
+    if (words.length <= maxWords) return text;
+    return words.slice(0, maxWords).join(' ') + '...';
+  };
   useEffect(() => {
     // Simple check for native platforms (can be enhanced based on your needs)
     const userAgent = navigator.userAgent || navigator.vendor;
@@ -96,6 +125,62 @@ export default function WBMap() {
       /android|iphone|ipad|ipod|windows phone|mobile/i.test(userAgent)
     );
   }, []);
+  // Add this useEffect to fetch artisans
+  useEffect(() => {
+  async function fetchArtisans() {
+    const { data: artisansData } = await supabase.from('artifacts').select('*');
+    if (artisansData) setArtisans(artisansData as ArtisanData[]);
+  }
+  fetchArtisans();
+}, []);
+  // Add shop markers effect
+// Add shop markers effect
+const shopMarkersRef = useRef<Marker[]>([]);
+useEffect(() => {
+  if (!mapRef.current || !activeId || !artisans.length) return;
+  const place = places.find((p) => p.id === activeId);
+  if (!place) return;
+
+  // Remove existing shop markers
+  shopMarkersRef.current.forEach((m) => m.remove());
+  shopMarkersRef.current = [];
+
+  // Flatten all shops from all artisans
+  const allShops = artisans.flatMap(artisan => 
+    artisan.products.map((shop: any) => ({
+      ...shop,
+      artisan: {
+        full_name: artisan.full_name,
+        email: artisan.email,
+        phone: artisan.phone
+      }
+    }))
+  );
+    // Filter shops by distance
+  const shopsInRange = allShops.filter((shop: any) =>
+    haversine(place.lat, place.lon, shop.latitude, shop.longitude) <= distanceSetting
+  );
+
+  // Add markers for shops
+  shopsInRange.forEach((shop: any) => {
+    const el = document.createElement('div');
+    el.innerHTML = `<div class="animated-marker">
+      <img src="/media/icons/shop.png" width="24" height="24" alt="Shop" />
+    </div>`;
+    el.className = 'cursor-pointer';
+    
+    const marker = new Marker({ element: el })
+      .setLngLat([shop.longitude, shop.latitude])
+      .addTo(mapRef.current!);
+    
+    el.addEventListener('click', () => {
+      // You could add a click handler for shop markers if needed
+    });
+    
+    shopMarkersRef.current.push(marker);
+  });
+}, [activeId, distanceSetting, artisans]);
+
 
   // Check if user is logged in
   useEffect(() => {
@@ -114,7 +199,7 @@ export default function WBMap() {
 
     return () => subscription.unsubscribe();
   }, []);
-
+  
   // Fetch user's tour plan from visit_places column
   useEffect(() => {
     const fetchTourPlan = async () => {
@@ -534,21 +619,39 @@ export default function WBMap() {
             Add to Tour Plan
           </button>
 
+          {/* Horizontally scrollable images */}
           {activePlace.images && activePlace.images.length > 0 && (
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-4 flex overflow-x-auto gap-2 py-2">
               {activePlace.images.map((imgSrc: string, idx: number) => (
                 <img
                   key={idx}
                   src={imgSrc.startsWith('http') ? imgSrc : imgSrc}
                   alt={`${activePlace.name} image ${idx + 1}`}
-                  className="rounded-lg w-full h-auto max-h-[200px] object-cover"
+                  className="rounded-lg h-32 w-auto object-cover flex-shrink-0"
                 />
               ))}
             </div>
           )}
+          
+          {/* Description with Read More option */}
           {activePlace.description && (
-            <p className="text-sm text-gray-400">{activePlace.description}</p>
+            <div className="mt-3">
+              <p className="text-sm text-gray-400">
+                {expandedDescriptions.has(activePlace.id) 
+                  ? activePlace.description 
+                  : truncateWords(activePlace.description, 20)}
+              </p>
+              {activePlace.description.split(' ').length > 20 && (
+                <button 
+                  onClick={() => toggleDescription(activePlace.id)}
+                  className="text-blue-400 text-xs mt-1"
+                >
+                  {expandedDescriptions.has(activePlace.id) ? 'Read less' : 'Read more'}
+                </button>
+              )}
+            </div>
           )}
+          
           {activePlace.google_map_link && (
             <a
               href={activePlace.google_map_link}
@@ -558,6 +661,14 @@ export default function WBMap() {
               Navigate in Google Maps
             </a>
           )}
+          
+          {/* Add ArtifactsNearby component */}
+          <ArtifactsNearby 
+            activePlace={activePlace} 
+            distanceSetting={distanceSetting} 
+            shops={artisans}
+          />
+
 
           <h4 className="mt-4 font-semibold">
             <span className="text-gray-400">Hotels within {distanceSetting} km</span>

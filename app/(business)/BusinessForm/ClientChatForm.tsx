@@ -1,6 +1,7 @@
+// ClientChatForm.tsx
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, useEffect } from "react";
 import { createClient } from "@supabase/supabase-js";
 import clsx from "clsx";
 
@@ -14,6 +15,7 @@ type ClientChatFormProps = {
   userId: string;
   defaultEmail?: string;
   defaultName?: string;
+  existingData?: any;
 };
 
 type StepKey =
@@ -36,6 +38,7 @@ export default function ClientChatForm({
   userId,
   defaultEmail,
   defaultName,
+  existingData,
 }: ClientChatFormProps) {
   const [current, setCurrent] = useState<StepKey>("org");
   const [org, setOrg] = useState(defaultName || "");
@@ -49,6 +52,36 @@ export default function ClientChatForm({
   const [toast, setToast] = useState<null | { type: "ok" | "err"; msg: string }>(null);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
+  // Initialize with existing data if available
+  useEffect(() => {
+    if (existingData) {
+      setOrg(existingData.org_name || "");
+      setEmail(existingData.email || "");
+      setPhone(existingData.phone || "");
+      setTypes(existingData.business_types || []);
+      setLinks(existingData.links && existingData.links.length > 0 
+        ? existingData.links 
+        : [""]
+      );
+      
+      // Handle both string and array formats for images
+      if (Array.isArray(existingData.images)) {
+        setImageUrls(existingData.images);
+      } else if (typeof existingData.images === 'string') {
+        try {
+          // Try to parse if it's a string representation of an array
+          const parsedImages = JSON.parse(existingData.images);
+          setImageUrls(Array.isArray(parsedImages) ? parsedImages : []);
+        } catch (e) {
+          console.error("Error parsing images:", e);
+          setImageUrls([]);
+        }
+      } else {
+        setImageUrls([]);
+      }
+    }
+  }, [existingData]);
+  
   const steps = useMemo<StepKey[]>(() => ["org", "email", "phone", "types", "links", "images", "review"], []);
 
   const canContinue = useMemo(() => {
@@ -119,10 +152,13 @@ export default function ClientChatForm({
     }
   }
 
-  async function saveToSupabase() {
+   async function saveToSupabase() {
     setSaving(true);
     setToast(null);
     try {
+      // Ensure images is properly formatted as an array
+      const imagesArray = Array.isArray(imageUrls) ? imageUrls : [];
+      
       const payload = {
         id: userId,
         org_name: org.trim(),
@@ -130,16 +166,28 @@ export default function ClientChatForm({
         phone: phone.trim(),
         business_types: types,
         links: links.filter((l) => l.trim().length > 0),
-        images: imageUrls,
+        images: imagesArray, // This should now be a proper array
+        updated_at: new Date().toISOString(),
       };
 
-      const { error } = await supabaseBrowser.from("business_profiles").insert(payload);
+      // Use upsert to either insert or update
+      const { error } = await supabaseBrowser
+        .from("business_profiles")
+        .upsert(payload);
+      
       if (error) throw error;
 
-      setToast({ type: "ok", msg: "Saved successfully! Redirecting…" });
-      setTimeout(() => {
-        window.location.href = "/";
-      }, 900);
+      setToast({ type: "ok", msg: existingData ? "Updated successfully! Redirecting…" : "Saved successfully! Redirecting…" });
+
+      if (existingData) {
+        setTimeout(() => {
+          window.location.href = "/BusinessDashboard";
+        }, 900);
+      } else {
+        setTimeout(() => {
+          window.location.href = "/";
+        }, 900);
+      }
     } catch (e: any) {
       setToast({ type: "err", msg: e?.message || "Failed to save." });
     } finally {
@@ -147,14 +195,20 @@ export default function ClientChatForm({
     }
   }
 
+
   return (
-    <div className="rounded-2xl border border-stone-200 bg-white shadow-sm text-gray-700">
+    <div className="rounded-2xl border border-blue-200 bg-gradient-to-b from-white to-blue-50 shadow-lg text-blue-900">
       {/* Chat window */}
-      <div ref={scrollerRef} className="max-h-[70vh] overflow-auto p-4 sm:p-6 space-y-4 text-gray-700">
-        <BotBubble>Hey! Let’s register your business. I’ll ask a few questions, and then we’ll save it.</BotBubble>
+      <div ref={scrollerRef} className="max-h-[70vh] overflow-auto p-4 sm:p-6 space-y-4">
+        <BotBubble>
+          {existingData 
+            ? "Let's update your business information. I'll ask a few questions, and then we'll save the changes."
+            : "Hey! Let's register your business. I'll ask a few questions, and then we'll save it."
+          }
+        </BotBubble>
 
         {/* ORG */}
-        <BotBubble>What’s your organization name?</BotBubble>
+        <BotBubble>What's your organization name?</BotBubble>
         {current === "org" ? (
           <YouBubble active>
             <input
@@ -162,7 +216,7 @@ export default function ClientChatForm({
               value={org}
               onChange={(e) => setOrg(e.target.value)}
               placeholder="Enter organization name..."
-              className="w-full bg-transparent outline-none"
+              className="w-full bg-transparent outline-none placeholder-blue-300"
             />
           </YouBubble>
         ) : org && <YouBubble>{org}</YouBubble>}
@@ -170,7 +224,7 @@ export default function ClientChatForm({
         {/* EMAIL */}
         {current !== "org" && (
           <>
-            <BotBubble>What’s your business email?</BotBubble>
+            <BotBubble>What's your business email?</BotBubble>
             {current === "email" ? (
               <YouBubble active>
                 <input
@@ -178,7 +232,7 @@ export default function ClientChatForm({
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter email..."
-                  className="w-full bg-transparent outline-none"
+                  className="w-full bg-transparent outline-none placeholder-blue-300"
                 />
               </YouBubble>
             ) : email && <YouBubble>{email}</YouBubble>}
@@ -188,7 +242,7 @@ export default function ClientChatForm({
         {/* PHONE */}
         {steps.indexOf(current) >= steps.indexOf("phone") && (
           <>
-            <BotBubble>What’s your contact number?</BotBubble>
+            <BotBubble>What's your contact number?</BotBubble>
             {current === "phone" ? (
               <YouBubble active>
                 <input
@@ -196,7 +250,7 @@ export default function ClientChatForm({
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="Enter phone..."
-                  className="w-full bg-transparent outline-none"
+                  className="w-full bg-transparent outline-none placeholder-blue-300"
                 />
               </YouBubble>
             ) : phone && <YouBubble>{phone}</YouBubble>}
@@ -220,10 +274,10 @@ export default function ClientChatForm({
                         )
                       }
                       className={clsx(
-                        "px-3 py-1 rounded-full text-sm",
+                        "px-3 py-1 rounded-full text-sm transition-all",
                         types.includes(t)
-                          ? "bg-black text-white"
-                          : "bg-stone-200 text-gray-700"
+                          ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                          : "bg-blue-100 text-blue-700 hover:bg-blue-200"
                       )}
                     >
                       {t}
@@ -255,13 +309,13 @@ export default function ClientChatForm({
                         newLinks[i] = e.target.value;
                         setLinks(newLinks);
                       }}
-                      className="w-full bg-transparent outline-none border-b border-stone-300"
+                      className="w-full bg-transparent outline-none border-b border-blue-300 focus:border-purple-500 placeholder-blue-300"
                     />
                   ))}
                   <button
                     type="button"
                     onClick={() => setLinks([...links, ""])}
-                    className="text-xs text-blue-600"
+                    className="text-xs text-purple-600 hover:text-purple-800"
                   >
                     + Add another
                   </button>
@@ -286,11 +340,12 @@ export default function ClientChatForm({
                   multiple
                   accept="image/*"
                   onChange={(e) => handleImageUpload(e.target.files)}
+                  className="text-white"
                 />
               </YouBubble>
             ) : (
               imageUrls.length > 0 && (
-                <YouBubble>{`${imageUrls.length} image(s) uploaded`}</YouBubble>
+                <YouBubble><span className="text-white">{`${imageUrls.length} image(s) uploaded`}</span></YouBubble>
               )
             )}
           </>
@@ -299,15 +354,15 @@ export default function ClientChatForm({
         {/* REVIEW */}
         {current === "review" && (
           <>
-            <BotBubble>Here’s what we’ll save. Looks good?</BotBubble>
+            <BotBubble>Here's what we'll save. Looks good?</BotBubble>
             <YouBubble>
-              <div className="text-sm space-y-1">
-                <Row label="Org">{org}</Row>
-                <Row label="Email">{email}</Row>
-                <Row label="Phone">{phone}</Row>
-                <Row label="Types">{types.join(", ")}</Row>
-                <Row label="Links">{links.join(", ")}</Row>
-                <Row label="Images">{imageUrls.length} uploaded</Row>
+              <div className="text-sm space-y-1 text-white">
+                <Row label="Org"><span className="text-white">{org}</span></Row>
+                <Row label="Email"><span className="text-white">{email}</span></Row>
+                <Row label="Phone"><span className="text-white">{phone}</span></Row>
+                <Row label="Types"><span className="text-white">{types.join(", ")}</span></Row>
+                <Row label="Links"><span className="text-white">{links.join(", ")}</span></Row>
+                <Row label="Images"><span className="text-white">{imageUrls.length > 0 ? "Yes" : "No"}</span></Row>
               </div>
             </YouBubble>
           </>
@@ -315,12 +370,12 @@ export default function ClientChatForm({
       </div>
 
       {/* Footer controls */}
-      <div className="flex items-center justify-between gap-2 border-t px-4 py-3 sm:px-6 text-gray-700">
+      <div className="flex items-center justify-between gap-2 border-t border-blue-200 px-4 py-3 sm:px-6">
         <button
           type="button"
           onClick={prev}
           disabled={current === "org"}
-          className="rounded-xl border border-stone-300 px-4 py-2 text-sm hover:bg-stone-50 disabled:opacity-40"
+          className="rounded-xl border border-blue-300 px-4 py-2 text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-40 transition-colors"
         >
           ◀ Back
         </button>
@@ -331,8 +386,10 @@ export default function ClientChatForm({
             onClick={next}
             disabled={!canContinue}
             className={clsx(
-              "rounded-xl px-5 py-2 text-sm font-semibold transition shadow",
-              canContinue ? "bg-black text-white hover:brightness-110" : "bg-stone-300 text-stone-600"
+              "rounded-xl px-5 py-2 text-sm font-semibold transition-all shadow",
+              canContinue 
+                ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700" 
+                : "bg-blue-100 text-blue-400"
             )}
           >
             {labelForNext(current)}
@@ -343,11 +400,13 @@ export default function ClientChatForm({
             onClick={saveToSupabase}
             disabled={saving}
             className={clsx(
-              "rounded-xl px-5 py-2 text-sm font-semibold transition shadow",
-              saving ? "bg-stone-300 text-stone-600" : "bg-black text-white hover:brightness-110"
+              "rounded-xl px-5 py-2 text-sm font-semibold transition-all shadow",
+              saving 
+                ? "bg-blue-100 text-blue-400" 
+                : "bg-gradient-to-r from-green-600 to-blue-600 text-white hover:from-green-700 hover:to-blue-700"
             )}
           >
-            {saving ? "Saving…" : "Save to Supabase"}
+            {saving ? "Saving…" : (existingData ? "Update Profile" : "Save")}
           </button>
         )}
       </div>
@@ -356,8 +415,10 @@ export default function ClientChatForm({
       {toast && (
         <div
           className={clsx(
-            "fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl px-4 py-2 text-sm shadow-lg",
-            toast.type === "ok" ? "bg-emerald-600 text-white" : "bg-rose-600 text-white"
+            "fixed bottom-6 left-1/2 -translate-x-1/2 rounded-xl px-4 py-2 text-sm shadow-lg transition-opacity",
+            toast.type === "ok" 
+              ? "bg-gradient-to-r from-green-600 to-blue-600 text-white" 
+              : "bg-gradient-to-r from-red-500 to-purple-600 text-white"
           )}
         >
           {toast.msg}
@@ -371,11 +432,13 @@ export default function ClientChatForm({
 function BotBubble({ children, highlight }: { children: React.ReactNode; highlight?: boolean }) {
   return (
     <div className="flex items-start gap-3">
-      <div className="h-9 w-9 shrink-0 rounded-2xl bg-black text-white grid place-items-center shadow">💬</div>
+      <div className="h-9 w-9 shrink-0 rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 text-white grid place-items-center shadow">💬</div>
       <div
         className={clsx(
           "max-w-[80%] rounded-2xl border px-4 py-3 text-sm shadow-sm",
-          highlight ? "border-black bg-white" : "border-stone-200 bg-white"
+          highlight 
+            ? "border-purple-300 bg-gradient-to-b from-white to-blue-50" 
+            : "border-blue-200 bg-gradient-to-b from-white to-blue-50"
         )}
       >
         {children}
@@ -390,7 +453,9 @@ function YouBubble({ children, active }: { children: React.ReactNode; active?: b
       <div
         className={clsx(
           "max-w-[80%] rounded-2xl px-4 py-3 text-sm shadow-sm",
-          active ? "bg-stone-900 text-white" : "bg-stone-800 text-white/90"
+          active 
+            ? "bg-gradient-to-r from-blue-700 to-purple-700 text-white" 
+            : "bg-gradient-to-r from-blue-600 to-purple-600 text-white/90"
         )}
       >
         {children}
@@ -402,8 +467,8 @@ function YouBubble({ children, active }: { children: React.ReactNode; active?: b
 function Row({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="flex gap-2">
-      <div className="w-28 shrink-0 font-medium">{label}:</div>
-      <div className="flex-1">{children}</div>
+  <div className="w-28 shrink-0 font-medium text-white">{label}:</div>
+      <div className="flex-1 text-blue-800">{children}</div>
     </div>
   );
 }

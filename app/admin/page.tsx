@@ -343,7 +343,7 @@ function EventsAdmin() {
         data: {
           id,
           ...newEvent,
-          images: imageUrls,
+          image_url: imageUrls,
           created_at,
         },
       }),

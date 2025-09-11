@@ -3,23 +3,33 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MapPin, Camera, Heart, ArrowRight, Users, Search, X } from "lucide-react";
-
+import { MapPin, Camera, Heart, ArrowRight, Users, X, Search as SearchIcon } from "lucide-react";
+import Search from "@/components/Search";
 import HeroSection from "../components/home/HeroSection";
 import FeaturedDestinations from "../components/home/FeaturedDestinations";
 import CulturalHighlights from "../components/home/CulturalHighlights";
 import TestimonialSection from "../components/home/TestimonialSection";
 import BottomNav from "@/components/BottomNav";
 import { Button } from "@/components/ui/button";
-// import Navbar from "@/components/Navbar";
-// import Footer from "@/components/Footer";
 import Menu from "@/components/Menu";
 import Chatbot from "@/components/Chatbot";
+
+// Define the SearchResult interface for the home page
+interface SearchResult {
+  id: string;
+  type: 'place' | 'hotel' | 'event' | 'artisan' | 'product';
+  name: string;
+  image: string | null;
+  rating?: number;
+  location?: string;
+  description?: string;
+  [key: string]: any;
+}
 
 export default function Home() {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [searchQuery, setSearchQuery] = useState("");
-
+  const [showChatbot, setShowChatbot] = useState(false);
   const router = useRouter();
 
   const heroImages = [
@@ -42,55 +52,52 @@ export default function Home() {
     { icon: Users, label: "Happy Visitors", value: "10K+" },
   ];
 
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim() === "") return;
-    alert(`Searching for: ${searchQuery}`);
+  const handleSearchResultSelect = (result: SearchResult) => {
+    // Handle the search result selection
+    console.log('Selected result:', result);
+    
+    // Navigate to the appropriate page based on the result type
+    switch (result.type) {
+      case 'place':
+        router.push(`/places/${result.id}`);
+        break;
+      case 'hotel':
+        router.push(`/hotels/${result.id}`);
+        break;
+      case 'event':
+        router.push(`/events/${result.id}`);
+        break;
+      case 'artisan':
+        router.push(`/artisans/${result.id}`);
+        break;
+      case 'product':
+        router.push(`/products/${result.id}`);
+        break;
+      default:
+        // For suggestions, navigate to a search results page
+        router.push(`/search?q=${encodeURIComponent(result.name)}`);
+    }
   };
-    const [showChatbot, setShowChatbot] = useState(false);
-
 
   return (
     <>
       {/* Main Content */}
-      {/* <Navbar /> */}
       <Menu />
       <HeroSection heroImages={heroImages} currentImageIndex={currentImageIndex} />
 
-    <section className="py-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
-  <div className="max-w-3xl mx-auto px-4">
-    <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-8 drop-shadow-sm">
-      Find Your Perfect Experience
-    </h2>
+      <section className="py-16 bg-gradient-to-br from-gray-50 via-white to-gray-100">
+        <div className="max-w-3xl mx-auto px-4">
+          <h2 className="text-center text-3xl font-extrabold text-gray-900 mb-8 drop-shadow-sm">
+            Find Your Perfect Experience
+          </h2>
 
-    <form
-      onSubmit={handleSearch}
-      className="flex items-center bg-white rounded-full shadow-lg border border-gray-200 overflow-hidden transition-all duration-300 focus-within:ring-2 focus-within:ring-indigo-400"
-    >
-      {/* Input Field */}
-      <input
-        type="text"
-        placeholder="Search destinations, culture, or heritage..."
-        value={searchQuery}
-        onChange={(e) => setSearchQuery(e.target.value)}
-        className="flex-1 px-6 py-4 text-gray-900 placeholder-gray-500 
-                   focus:outline-none font-medium"
-      />
-
-      {/* Search Button */}
-      <button
-        type="submit"
-        className="bg-gradient-to-r from-indigo-600 via-purple-600 to-cyan-500 
-                   hover:from-indigo-700 hover:via-purple-700 hover:to-cyan-600 
-                   text-white px-8 py-4 font-semibold rounded-r-full 
-                   transition-all duration-300 transform hover:scale-105 shadow-md"
-      >
-        <Search className="w-5 h-5" />
-      </button>
-    </form>
-  </div>
-</section>
-
+          <Search 
+            placeholder="Discover places, hotels, events and more..."
+            onResultSelect={handleSearchResultSelect}
+            className="max-w-2xl mx-auto my-8"
+          />
+        </div>
+      </section>
 
       <section className="py-16 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -130,15 +137,14 @@ export default function Home() {
 
       <TestimonialSection />
 
-      {/* Bottom Navigation */}
-        {/* Floating Action Button & Chatbot */}
+      {/* Floating Action Button & Chatbot */}
       <div className="fixed bottom-24 right-6 z-40 flex flex-col items-end">
         {!showChatbot ? (
           <button
             className="w-14 h-14 bg-gradient-to-r from-green-600 to-blue-600 rounded-full shadow-2xl flex items-center justify-center text-white hover:shadow-3xl transition-all duration-300 animate-bounce"
             onClick={() => setShowChatbot(true)}
           >
-            <Search className="w-6 h-6" />
+            <SearchIcon className="w-6 h-6" />
           </button>
         ) : (
           <>
@@ -154,7 +160,6 @@ export default function Home() {
           </>
         )}
       </div>
-      {/* <Footer /> */}
     </>
   );
 }

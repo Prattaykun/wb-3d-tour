@@ -1,38 +1,90 @@
-//api/search/route.ts
-
-import { NextResponse } from 'next/server';
-// import { embeddingModel } from '@/lib/gemini';
-import { supabase } from '@/utils/supabase/server';
 // app/api/search/route.ts
+import { NextResponse } from 'next/server';
+import { embeddingModel } from '@/lib/gemini';
+import { supabase } from '@/utils/supabase/server';
 
-// POST /api/search
 export async function POST(req: Request) {
   try {
-    const { embedding, query, limit = 5 } = await req.json();
+    const { query, limit = 12 } = await req.json();
 
-    if (!embedding || !Array.isArray(embedding)) {
+    if (!query) {
       return NextResponse.json(
-        { error: "Embedding is required" },
+        { error: "Query is required" },
         { status: 400 }
       );
     }
 
-    // Call your SQL function search_all (instead of match_documents)
-    const { data, error } = await supabase.rpc("search_all", {
-      query_embedding: embedding,
-      match_threshold: 0.78,
-      match_count: limit,
-    });
+    // Generate embedding from query using Gemini
+    const result = await embeddingModel.embedContent(query);
+    const embedding = result.embedding?.values;
 
-    if (error) {
-      console.error("Supabase search error:", error);
+    if (!embedding) {
+      console.error("No embedding returned from Gemini:", result);
       return NextResponse.json(
-        { error: "Failed to search in Supabase" },
+        { error: "Failed to generate embedding" },
         { status: 500 }
       );
     }
 
-    return NextResponse.json({ results: data ?? [] });
+    // Search across all tables using the RPC function
+  const { data, error } = await supabase.rpc("search_all", {
+  query_embedding: embedding,
+  match_threshold: 0.45,
+  match_count: limit,
+});
+
+if (error) {
+  console.error("Supabase search error details:", error);
+  return NextResponse.json(
+    { 
+      error: "Failed to search in Supabase",
+      // Include details only in development
+      ...(process.env.NODE_ENV === 'development' && { details: error.message })
+    },
+    { status: 500 }
+  );
+}
+
+    // Format the results with consistent structure
+    const formattedResults = data.map((item: any) => {
+      const baseResult = {
+        id: item.id,
+        name: item.name || item.title,
+        description: item.description || null,
+        image: item.images?.[0] || item.image_url || null,
+      };
+
+      // Add type-specific fields
+      if (item.table_name === 'places') {
+        return {
+          ...baseResult,
+          type: 'place',
+          rating: item.rating || null,
+          location: item.city || null,
+          category: item.category || null,
+        };
+      } else if (item.table_name === 'hotels') {
+        return {
+          ...baseResult,
+          type: 'hotel',
+          rating: item.rating || null,
+          location: item.city || null,
+          priceBand: item.priceBand || null,
+        };
+      } else if (item.table_name === 'events') {
+        return {
+          ...baseResult,
+          type: 'event',
+          location: item.city || item.venue || null,
+          date: item.start_date || null,
+          category: item.category || null,
+        };
+      }
+
+      return baseResult;
+    });
+
+    return NextResponse.json({ results: formattedResults });
   } catch (err) {
     console.error("Search API error:", err);
     return NextResponse.json(

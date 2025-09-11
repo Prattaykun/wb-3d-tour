@@ -91,11 +91,12 @@ export default function Home() {
             Find Your Perfect Experience
           </h2>
 
-          <Search 
-            placeholder="Discover places, hotels, events and more..."
-            onResultSelect={handleSearchResultSelect}
-            className="max-w-2xl mx-auto my-8"
-          />
+          <Search
+  placeholder="🔍 Discover places, hotels, events and more..."
+  onResultSelect={handleSearchResultSelect}
+  className="w-full text-black placeholder-black"
+/>
+
         </div>
       </section>
 

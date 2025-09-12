@@ -40,6 +40,7 @@ export default function EventsPage() {
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
   const [events, setEvents] = useState<EventItem[]>([]);
   const [loading, setLoading] = useState(true);
+  
   const handleShare = () => {
   const shareData = {
     title: selectedEvent?.title,
@@ -139,6 +140,8 @@ const filtered = useMemo(() => {
 }, [query, activeCategory, showOngoingOnly, events]);
 
 
+
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-gray-100 py-10 px-4">
       <section className="max-w-7xl mx-auto">
@@ -203,16 +206,24 @@ const filtered = useMemo(() => {
         </div>
 
         {/* Events Grid */}
-        {loading ? (
-          <p className="text-center text-slate-500">Loading events...</p>
-        ) : filtered.length === 0 ? (
-          <div className="text-center text-slate-500 py-20">
-            <p className="text-lg">No events found</p>
-            <p className="text-sm mt-2">
-              Try adjusting filters or search for something else
-            </p>
-          </div>
-        ) : (
+ {loading ? (
+  <div className="fixed inset-0 flex flex-col items-center justify-center bg-white z-50">
+    {/* Spinner */}
+    <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-300 border-t-indigo-500 shadow-md"></div>
+    
+    {/* Text */}
+    <p className="mt-6 text-gray-700 text-lg font-semibold tracking-wide animate-pulse">
+      Loading Events...
+    </p>
+  </div>
+) : filtered.length === 0 ? (
+  <div className="text-center text-slate-500 py-20">
+    <p className="text-lg font-semibold">No events found</p>
+    <p className="text-sm mt-2">
+      Try adjusting filters or search for something else
+    </p>
+  </div>
+) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {filtered.map((ev) => {
               const status = getEventStatus(ev);

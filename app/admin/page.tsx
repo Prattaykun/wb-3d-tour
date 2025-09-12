@@ -328,37 +328,55 @@ function EventsAdmin() {
   }, []);
 
   async function fetchEvents() {
-    const { data } = await supabase.from("events").select("*");
+    const { data, error } = await supabase.from("events").select("*");
+    if (error) {
+      console.error("Error fetching events:", error);
+      return;
+    }
     if (data) setEvents(data);
   }
 
   async function addEvent() {
-    const id = crypto.randomUUID();
-    const imageUrls = await uploadImages(imageFiles);
-    const created_at = new Date().toISOString();
-    await fetch("/api/embed", {
-      method: "POST",
-      body: JSON.stringify({
-        type: "events",
-        data: {
-          id,
-          ...newEvent,
-          image_url: imageUrls,
-          created_at,
-        },
-      }),
-    });
-    setNewEvent({
-      title: "",
-      category: "",
-      start_date: "",
-      end_date: "",
-      venue: "",
-      city: "",
-      description: "",
-    });
-    setImageFiles([]);
-    fetchEvents();
+    try {
+      const id = crypto.randomUUID();
+      const imageUrls = await uploadImages(imageFiles); // returns array of urls
+      const created_at = new Date().toISOString();
+
+      // ✅ Use only the first image since schema has text column `image_url`
+      const singleImageUrl = imageUrls[0] || null;
+
+      const res = await fetch("/api/embed", {
+        method: "POST",
+        body: JSON.stringify({
+          type: "events",
+          data: {
+            id,
+            ...newEvent,
+            image_url: singleImageUrl,
+            created_at,
+          },
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("API error:", await res.text());
+      }
+
+      // reset form
+      setNewEvent({
+        title: "",
+        category: "",
+        start_date: "",
+        end_date: "",
+        venue: "",
+        city: "",
+        description: "",
+      });
+      setImageFiles([]);
+      fetchEvents();
+    } catch (err) {
+      console.error("Add event error:", err);
+    }
   }
 
   function handleImageChange(index: number, file: File | null) {
@@ -368,7 +386,8 @@ function EventsAdmin() {
   }
 
   async function deleteEvent(id: string) {
-    await supabase.from("events").delete().eq("id", id);
+    const { error } = await supabase.from("events").delete().eq("id", id);
+    if (error) console.error("Delete error:", error);
     fetchEvents();
   }
 

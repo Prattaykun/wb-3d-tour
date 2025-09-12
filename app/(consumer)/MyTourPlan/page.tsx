@@ -629,12 +629,30 @@ const handleSubmit = async () => {
     if (showAdditionalRequirements) {
       return (
         <div className="space-y-4">
-          <textarea
-            placeholder="Please share any additional requirements, preferences, or special requests for your itinerary..."
-            value={additionalRequirements}
-            onChange={(e) => setAdditionalRequirements(e.target.value)}
-            className="w-full p-3 border border-purple-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent h-24"
-          />
+           <textarea
+    placeholder="Please share any additional requirements, preferences, or special requests for your itinerary..."
+    value={additionalRequirements}
+    onChange={(e) => setAdditionalRequirements(e.target.value)}
+    className="
+      w-full
+      p-4
+      border-2
+      border-purple-300
+      rounded-xl
+      shadow-sm
+      transition-all
+      duration-300
+      ease-in-out
+      focus:border-purple-500
+      focus:ring-4
+      focus:ring-purple-200
+      hover:shadow-md
+      placeholder-gray-400
+      text-black
+      h-28
+      resize-none
+    "
+  />
           <div className="flex space-x-2">
             <button
               onClick={handleAdditionalRequirementsSubmit}
@@ -968,18 +986,40 @@ const handleSubmit = async () => {
           <div className="p-6 prose max-w-none" dangerouslySetInnerHTML={{ __html: planResult }} />
           
           <div className="p-6 bg-gray-50 flex justify-between">
-            <button 
-              onClick={() => setPlanResult(null)}
-              className="px-4 py-2 bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
-            >
-              Modify Plan
-            </button>
-            <button 
-              onClick={() => window.print()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Print Itinerary
-            </button>
+          <button
+  onClick={() => setPlanResult(null)}
+  className="
+    px-6 py-3
+    bg-gradient-to-r from-amber-400 via-orange-400 to-red-400
+    text-white font-semibold
+    rounded-2xl
+    shadow-lg
+    hover:scale-105 hover:shadow-xl
+    active:scale-95 active:shadow-md
+    transition-all duration-300
+    focus:outline-none focus:ring-4 focus:ring-amber-300
+  "
+>
+  Modify Plan
+</button>
+
+           <button
+  onClick={() => window.print()}
+  className="
+    px-6 py-3
+    bg-gradient-to-r from-blue-500 via-blue-600 to-blue-700
+    text-white font-semibold
+    rounded-2xl
+    shadow-lg
+    hover:scale-105 hover:shadow-xl
+    active:scale-95 active:shadow-md
+    transition-all duration-300
+    focus:outline-none focus:ring-4 focus:ring-blue-300
+  "
+>
+  🖨️ Print Itinerary
+</button>
+
           </div>
         </div>
       </div>

@@ -2,24 +2,24 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
-import { useUser } from '@supabase/auth-helpers-react';
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { useSessionContext, useUser, useSupabaseClient } from '@supabase/auth-helpers-react';
 
 interface Review {
   id: string;
+  user_id: string;
   type: 'place' | 'hotel' | 'event';
   rating: number;
   comment: string;
-  createdAt: string;
-  updatedAt: string;
-  item_id: string;
+  created_at: string;
+  updated_at: string;
+  place_id: string | null;
+  hotel_id: string | null;
+  event_id: string | null;
   item_name: string;
   item_image?: string;
+}
+interface ConsumerReviewProps {
+  user: any; // or the proper Supabase user type
 }
 
 interface SearchResult {
@@ -33,8 +33,8 @@ interface SearchResult {
   [key: string]: any;
 }
 
-export default function ConsumerReview() {
-  const [searchQuery, setSearchQuery] = useState('');
+export default function ConsumerReview({ user }: ConsumerReviewProps) { 
+   const [searchQuery, setSearchQuery] = useState('');
   const [filters, setFilters] = useState({
     places: true,
     hotels: true,
@@ -44,13 +44,22 @@ export default function ConsumerReview() {
   const [currentPage, setCurrentPage] = useState(1);
   const [userReviews, setUserReviews] = useState<Review[]>([]);
   const [selectedItem, setSelectedItem] = useState<SearchResult | null>(null);
+  const [selectedReview, setSelectedReview] = useState<Review | null>(null);
   const [userRating, setUserRating] = useState(0);
   const [userComment, setUserComment] = useState('');
+  const [userImage, setUserImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
-  
-  const user = useUser();
+  // add after other useState hooks
+const [browseItems, setBrowseItems] = useState<SearchResult[]>([]);
+const [browsePage, setBrowsePage] = useState(1);
+const browsePerPage = 12;
+const [browseLoading, setBrowseLoading] = useState(false);
+
+  const { isLoading: sessionLoading } = useSessionContext();
+  const supabase = useSupabaseClient();
   const resultsPerPage = 12;
 
   // Fetch user reviews on component mount
@@ -67,7 +76,8 @@ export default function ConsumerReview() {
       const { data, error } = await supabase
         .from('reviews')
         .select('*')
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
       
       if (error) {
         console.error('Error fetching user reviews:', error);
@@ -90,7 +100,6 @@ export default function ConsumerReview() {
     
     setIsLoading(true);
     try {
-      // Search using the query text directly
       const searchResponse = await fetch('/api/search', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -105,7 +114,6 @@ export default function ConsumerReview() {
       
       const { results } = await searchResponse.json();
       
-      // Filter results based on selected types
       const filteredResults = results.filter((result: SearchResult) => {
         if (result.type === 'place' && filters.places) return true;
         if (result.type === 'hotel' && filters.hotels) return true;
@@ -121,6 +129,23 @@ export default function ConsumerReview() {
       setIsLoading(false);
     }
   }, [searchQuery, filters]);
+  // Fetch browse items on component mount and when browsePage changes
+  useEffect(() => {
+  const fetchBrowseItems = async () => {
+    setBrowseLoading(true);
+    try {
+      const res = await fetch(`/api/browse?page=${browsePage}&limit=${browsePerPage}`);
+      if (!res.ok) throw new Error('Failed to load browse items');
+      const { results } = await res.json();
+      setBrowseItems(results);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBrowseLoading(false);
+    }
+  };
+  fetchBrowseItems();
+}, [browsePage]);
 
   // Debounced search effect
   useEffect(() => {
@@ -150,8 +175,26 @@ export default function ConsumerReview() {
     }));
   };
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setUserImage(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
   const handleSubmitReview = async () => {
-    if (!user || !selectedItem || userRating === 0) {
+    // Check if user is available
+    if (!user) {
+      alert('Please log in to submit a review');
+      return;
+    }
+    
+    if (!selectedItem || userRating === 0) {
       console.log('Missing required data:', { user, selectedItem, userRating });
       return;
     }
@@ -159,44 +202,65 @@ export default function ConsumerReview() {
     setIsSubmitting(true);
     
     try {
-      const reviewData = {
+      const reviewData: Record<string, any> = {
         user_id: user.id,
-        item_id: selectedItem.id,
         type: selectedItem.type,
         rating: userRating,
         comment: userComment,
         item_name: selectedItem.name,
         item_image: selectedItem.image,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
-      
-      console.log('Submitting review:', reviewData);
-      
-      // Insert the review into the reviews table
-      const { data, error } = await supabase
-        .from('reviews')
-        .insert([reviewData])
-        .select();
+
+      // Set the correct foreign key based on type
+      if (selectedItem.type === 'place') reviewData.place_id = selectedItem.id;
+      if (selectedItem.type === 'hotel') reviewData.hotel_id = selectedItem.id;
+      if (selectedItem.type === 'event') reviewData.event_id = selectedItem.id;
+
+      let data;
+      let error;
+
+      if (selectedReview) {
+        // Update existing review
+        ({ data, error } = await supabase
+          .from('reviews')
+          .update(reviewData)
+          .eq('id', selectedReview.id)
+          .select());
+      } else {
+        // Create new review
+        reviewData.created_at = new Date().toISOString();
+        ({ data, error } = await supabase
+          .from('reviews')
+          .insert([reviewData])
+          .select());
+      }
       
       if (error) {
         console.error('Supabase error:', error);
         throw error;
       }
       
-      console.log('Review submitted successfully:', data);
-      
       // Update local state
       if (data && data.length > 0) {
-        setUserReviews(prev => [...prev, data[0]]);
+        if (selectedReview) {
+          setUserReviews(prev => prev.map(review => 
+            review.id === selectedReview.id ? data[0] : review
+          ));
+        } else {
+          setUserReviews(prev => [...prev, data[0]]);
+        }
       }
       
       // Reset form
       setSelectedItem(null);
+      setSelectedReview(null);
       setUserRating(0);
       setUserComment('');
+      setUserImage(null);
+      setImagePreview(null);
       
-      alert('Review submitted successfully!');
+      alert(selectedReview ? 'Review updated successfully!' : 'Review submitted successfully!');
     } catch (error) {
       console.error('Error submitting review:', error);
       alert('There was an error submitting your review. Please try again.');
@@ -207,18 +271,74 @@ export default function ConsumerReview() {
 
   const handleItemSelect = (item: SearchResult) => {
     setSelectedItem(item);
+    setSelectedReview(null);
     
     // Check if user has already reviewed this item
-    const existingReview = userReviews.find(
-      review => review.item_id === item.id && review.type === item.type
-    );
-    
+    const existingReview = userReviews.find(review => {
+      if (item.type === 'place') return review.place_id === item.id;
+      if (item.type === 'hotel') return review.hotel_id === item.id;
+      if (item.type === 'event') return review.event_id === item.id;
+      return false;
+    });
+
     if (existingReview) {
+      setSelectedReview(existingReview);
       setUserRating(existingReview.rating);
       setUserComment(existingReview.comment);
     } else {
       setUserRating(0);
       setUserComment('');
+      setUserImage(null);
+      setImagePreview(null);
+    }
+  };
+
+  const handleEditReview = (review: Review) => {
+    setSelectedReview(review);
+    setUserRating(review.rating);
+    setUserComment(review.comment);
+    
+    // Find the corresponding item from search results
+    const itemId = review.place_id || review.hotel_id || review.event_id;
+    const itemType = review.type;
+    
+    const item = searchResults.find(result => 
+      result.id === itemId && result.type === itemType
+    );
+    
+    if (item) {
+      setSelectedItem(item);
+    } else {
+      // If item not in search results, create a mock item
+      setSelectedItem({
+        id: itemId || '',
+        type: itemType,
+        name: review.item_name,
+        image: review.item_image || null,
+      } as SearchResult);
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!confirm('Are you sure you want to delete this review?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('reviews')
+        .delete()
+        .eq('id', reviewId);
+      
+      if (error) {
+        console.error('Error deleting review:', error);
+        return;
+      }
+      
+      // Update local state
+      setUserReviews(prev => prev.filter(review => review.id !== reviewId));
+      alert('Review deleted successfully!');
+    } catch (error) {
+      console.error('Error deleting review:', error);
+      alert('There was an error deleting your review. Please try again.');
     }
   };
 
@@ -230,11 +350,25 @@ export default function ConsumerReview() {
 
   // Check if user has reviewed an item
   const hasUserReviewed = (itemId: string, itemType: string) => {
-    return userReviews.some(review => 
-      review.item_id === itemId && review.type === itemType
-    );
+    return userReviews.some(review => {
+      if (itemType === 'place') return review.place_id === itemId;
+      if (itemType === 'hotel') return review.hotel_id === itemId;
+      if (itemType === 'event') return review.event_id === itemId;
+      return false;
+    });
   };
 
+  // Add a loading state for session
+  if (sessionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  
+  // Add a check for authenticated user
+ 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -452,14 +586,21 @@ export default function ConsumerReview() {
         )}
         
         {/* Review Modal */}
-        {selectedItem && (
+        {(selectedItem || selectedReview) && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
               <div className="p-6">
                 <div className="flex justify-between items-start mb-4">
-                  <h2 className="text-2xl font-bold text-gray-800">Review {selectedItem.name}</h2>
+                  <h2 className="text-2xl font-bold text-gray-800">
+                    {selectedReview ? 'Edit Review' : 'Review'} {selectedItem?.name || selectedReview?.item_name}
+                  </h2>
                   <button 
-                    onClick={() => setSelectedItem(null)}
+                    onClick={() => {
+                      setSelectedItem(null);
+                      setSelectedReview(null);
+                      setUserImage(null);
+                      setImagePreview(null);
+                    }}
                     className="text-gray-500 hover:text-gray-700 transition-colors"
                   >
                     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -494,11 +635,43 @@ export default function ConsumerReview() {
                     rows={4}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   />
+                  
+                  <label className="block text-sm font-medium text-gray-700 mb-2 mt-4">
+                    Add Your Photo (Optional)
+                  </label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  />
+                  {imagePreview && (
+                    <div className="mt-2">
+                      <img 
+                        src={imagePreview} 
+                        alt="Preview" 
+                        className="w-32 h-32 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
                 </div>
                 
                 <div className="flex justify-end space-x-3">
+                  {selectedReview && (
+                    <button
+                      onClick={() => handleDeleteReview(selectedReview.id)}
+                      className="px-4 py-2 bg-red-600 text-white font-medium rounded-lg hover:bg-red-700 transition-all"
+                    >
+                      Delete
+                    </button>
+                  )}
                   <button
-                    onClick={() => setSelectedItem(null)}
+                    onClick={() => {
+                      setSelectedItem(null);
+                      setSelectedReview(null);
+                      setUserImage(null);
+                      setImagePreview(null);
+                    }}
                     className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors"
                   >
                     Cancel
@@ -514,9 +687,9 @@ export default function ConsumerReview() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
-                        Submitting...
+                        {selectedReview ? 'Updating...' : 'Submitting...'}
                       </>
-                    ) : 'Submit Review'}
+                    ) : selectedReview ? 'Update Review' : 'Submit Review'}
                   </button>
                 </div>
               </div>
@@ -542,6 +715,16 @@ export default function ConsumerReview() {
                 <div key={review.id} className="bg-white rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
                   <div className="flex justify-between items-start mb-3">
                     <h3 className="font-semibold text-lg capitalize">{review.item_name}</h3>
+                    <button
+                      onClick={() => handleEditReview(review)}
+                      className="text-blue-600 hover:text-blue-800 transition-colors"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="flex items-center mb-3">
                     <div className="flex text-yellow-400">
                       {'★'.repeat(review.rating)}
                       {'☆'.repeat(5 - review.rating)}
@@ -549,17 +732,106 @@ export default function ConsumerReview() {
                   </div>
                   <p className="text-gray-700 mb-4">{review.comment}</p>
                   <p className="text-sm text-gray-500">
-                    Reviewed on {new Date(review.createdAt).toLocaleDateString('en-US', { 
+                    Reviewed on {new Date(review.created_at).toLocaleDateString('en-US', { 
                       year: 'numeric', 
                       month: 'long', 
                       day: 'numeric' 
                     })}
                   </p>
+                  {review.updated_at !== review.created_at && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      Updated on {new Date(review.updated_at).toLocaleDateString('en-US', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                      })}
+                    </p>
+                  )}
                 </div>
               ))}
             </div>
           )}
         </div>
+        {/* Browse & Review Section */}
+<div className="mt-16">
+  <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+    Explore & Review
+  </h2>
+
+  {browseLoading && (
+    <div className="flex justify-center my-8">
+      <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+    </div>
+  )}
+
+  {!browseLoading && browseItems.length > 0 && (
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
+        {browseItems.map((item) => {
+          const userHasReviewed = hasUserReviewed(item.id, item.type);
+          return (
+            <div
+              key={`browse-${item.type}-${item.id}`}
+              className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all duration-300 cursor-pointer transform hover:-translate-y-1"
+              onClick={() => handleItemSelect(item)}
+            >
+              {item.image ? (
+                <img src={item.image} alt={item.name} className="w-full h-48 object-cover" />
+              ) : (
+                <div className="w-full h-48 bg-gradient-to-r from-blue-100 to-purple-100 flex items-center justify-center">
+                  <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+                      d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                </div>
+              )}
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-1">
+                  <h3 className="font-semibold text-lg truncate">{item.name}</h3>
+                  {userHasReviewed && (
+                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full">
+                      Reviewed
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-600 mb-2 capitalize">{item.type}</p>
+                {item.rating && (
+                  <div className="flex items-center mb-2">
+                    <div className="flex text-yellow-400">
+                      {'★'.repeat(Math.round(item.rating))}
+                      {'☆'.repeat(5 - Math.round(item.rating))}
+                    </div>
+                    <span className="ml-2 text-sm text-gray-600">{item.rating.toFixed(1)}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Pagination */}
+      <div className="flex justify-center mt-8">
+        <nav className="flex items-center space-x-2">
+          <button
+            onClick={() => setBrowsePage(p => Math.max(p - 1, 1))}
+            disabled={browsePage === 1}
+            className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 disabled:opacity-50 flex items-center"
+          >
+            ‹ Prev
+          </button>
+          <button
+            onClick={() => setBrowsePage(p => p + 1)}
+            className="px-4 py-2 rounded-lg bg-white border border-gray-300 text-gray-700 flex items-center"
+          >
+            Next ›
+          </button>
+        </nav>
+      </div>
+    </>
+  )}
+</div>
+
       </div>
     </div>
   );

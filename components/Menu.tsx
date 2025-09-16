@@ -117,7 +117,10 @@ export default function MenuToggle() {
 
             <div className="flex flex-col">
               {/* My Account */}
-              <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700">
+              <button className="flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition text-gray-700"
+              
+                onClick={() => window.location.href = "/profile"}
+              >
                 <span className="text-sm">My Account</span>
                 <User size={18} className="text-blue-500" />
               </button>

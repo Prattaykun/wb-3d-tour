@@ -1,4 +1,5 @@
 // app/reviews/page.tsx
+'use client';
 import ConsumerReview from '@/components/consumer/ConsumerReview';
 import { createClient } from '@supabase/supabase-js';
 import { useEffect, useState } from 'react';

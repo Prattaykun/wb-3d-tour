@@ -9,10 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@capacitor/android": "^7.4.3",
-    "@capacitor/app": "7.0.2",
-    "@capacitor/core": "^7.4.3",
-    "@capacitor/ios": "^7.4.3",
+    
     "@google/generative-ai": "^0.24.1",
     "@ionic/react": "^8.7.3",
     "@radix-ui/react-slot": "^1.2.3",

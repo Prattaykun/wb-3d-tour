@@ -1,7 +1,7 @@
 # West Bengal Tour App
 [![Ask DeepWiki](https://devin.ai/assets/askdeepwiki.png)](https://deepwiki.com/Prattaykun/wb-3d-tour)
 
-The West Bengal 3D Tour App is a comprehensive platform designed to showcase the rich cultural heritage, natural beauty, and vibrant traditions of West Bengal, India. It serves as a bridge connecting tourists with local artisans and travel businesses, offering an immersive experience for consumers and a powerful tool for local entrepreneurs.
+The West Bengal  Tour App is a comprehensive platform designed to showcase the rich cultural heritage, natural beauty, and vibrant traditions of West Bengal, India. It serves as a bridge connecting tourists with local artisans and travel businesses, offering an immersive experience for consumers and a powerful tool for local entrepreneurs.
 
 The application is built with a modern stack, including Next.js, Supabase for the backend, and Google's Gemini AI for intelligent features like semantic search and automated tour plan generation. It is also packaged with Capacitor for deployment as a native mobile application.
 

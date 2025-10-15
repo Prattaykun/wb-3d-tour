@@ -2,12 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from "@supabase/supabase-js";
-
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/utils/supabase/server';
 
 export default function ArtisanPayment() {
   const [user, setUser] = useState<any>(null);
@@ -17,35 +12,56 @@ export default function ArtisanPayment() {
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+        error,
+      } = await supabase.auth.getUser();
+      if (error) console.error('Get user error:', error);
       setUser(user);
     };
     getUser();
   }, []);
 
   const handlePayment = async () => {
+    if (!user) return;
+
     setLoading(true);
-    
-    // Simulate payment processing for 2 seconds
+
+    // Simulate a payment delay
     setTimeout(async () => {
-      // Update payment status in Supabase
-      if (user) {
-        const { error } = await supabase
+      // 1️⃣ Attempt to update an existing row
+      const { data: updatedRows, error: updateError } = await supabase
+        .from('artifacts')
+        .update({ payment_status: true })
+        .eq('artisan_id', user.id)
+        .select();
+
+      if (updateError) {
+        console.error('Update error:', updateError);
+        setLoading(false);
+        return;
+      }
+
+      // 2️⃣ If no row existed, insert a new one
+      if (!updatedRows || updatedRows.length === 0) {
+        const { error: insertError } = await supabase
           .from('artifacts')
-          .update({ payment_status: true })
-          .eq('artisan_id', user.id);
-          
-        if (error) {
-          console.error('Error updating payment status:', error);
-        } else {
-          setPaymentSuccess(true);
-          
-          // Redirect after a short delay to show success message
-          setTimeout(() => {
-            router.push('/ArtisanProductForm');
-          }, 2000);
+          .insert({
+            artisan_id: user.id,
+            payment_status: true,
+            // add any other required columns here with default values
+          });
+
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          setLoading(false);
+          return;
         }
       }
+
+      // 3️⃣ Show success UI and redirect
+      setPaymentSuccess(true);
+      setTimeout(() => router.push('/ArtisanProductForm'), 2000);
       setLoading(false);
     }, 2000);
   };
@@ -55,17 +71,34 @@ export default function ArtisanPayment() {
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 flex items-center justify-center p-6">
         <div className="bg-white rounded-2xl p-8 shadow-lg max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-            <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+            <svg
+              className="w-8 h-8 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M5 13l4 4L19 7"
+              />
             </svg>
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Payment Successful!</h2>
-          <p className="text-gray-600 mb-6">Your product listing payment has been processed successfully.</p>
-          <p className="text-blue-500 animate-pulse">Redirecting to product form...</p>
+          <h2 className="text-2xl font-bold text-gray-800 mb-4">
+            Payment Successful!
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Your product listing payment has been processed successfully.
+          </p>
+          <p className="text-blue-500 animate-pulse">
+            Redirecting to product form...
+          </p>
         </div>
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-green-50 p-6">
@@ -115,22 +148,38 @@ export default function ArtisanPayment() {
           </div>
           
           <button
-            onClick={handlePayment}
-            disabled={loading}
-            className="w-full mt-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
-          >
-            {loading ? (
-              <div className="flex items-center justify-center">
-                <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Processing...
-              </div>
-            ) : (
-              'Pay ₹2,000 (Demo)'
-            )}
-          </button>
+        onClick={handlePayment}
+        disabled={loading}
+        className="w-full mt-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white py-4 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-700 transition-all disabled:opacity-50"
+      >
+        {loading ? (
+          <div className="flex items-center justify-center">
+            <svg
+              className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              ></circle>
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              ></path>
+            </svg>
+            Processing...
+          </div>
+        ) : (
+          'Pay ₹2,000 (Demo)'
+        )}
+      </button>
           
           <p className="text-center text-gray-500 text-sm mt-4">
             This is a demo payment. No real transaction will occur.
